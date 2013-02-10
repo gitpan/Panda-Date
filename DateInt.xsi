@@ -1,0 +1,329 @@
+MODULE = Panda::Date                PACKAGE = Panda::Date
+PROTOTYPES: DISABLE
+#///////////////////////////// STATIC FUNCTIONS ///////////////////////////////////
+
+PDateInt *
+idate (SV* from, SV* till)
+CODE:
+    RETVAL = new PDateInt(from, till);
+    const char* CLASS = PDATE_INT_CLASS;
+OUTPUT:
+    RETVAL
+
+#///////////////////////////// OBJECT METHODS ///////////////////////////////////
+MODULE = Panda::Date                PACKAGE = Panda::Date::Int
+PROTOTYPES: DISABLE
+
+PDateInt *
+PDateInt::new (SV* from, SV* till)
+CODE:
+    RETVAL = new PDateInt(from, till);
+OUTPUT:
+    RETVAL
+
+
+void
+PDateInt::set_from (SV* from, SV* till)
+PPCODE:
+    THIS->setFrom(from, till);
+
+
+PDate*
+PDateInt::from (...)
+CODE:
+    if (items > 1) THIS->from(ST(1));
+    RETVAL = THIS->from()->clone();
+    const char* CLASS = PDATE_CLASS;
+OUTPUT:
+    RETVAL
+
+
+PDate*
+PDateInt::till (...)
+CODE:
+    if (items > 1) THIS->till(ST(1));
+    RETVAL = THIS->till()->clone();
+    const char* CLASS = PDATE_CLASS;
+OUTPUT:
+    RETVAL
+
+
+int64_t
+PDateInt::sec ()
+ALIAS:
+    secs     = 1
+    second   = 2
+    seconds  = 3
+    duration = 4
+CODE:
+    RETVAL = THIS->sec();
+OUTPUT:
+    RETVAL
+
+
+int64_t
+PDateInt::imin ()
+ALIAS:
+    imins    = 1
+    iminute  = 2
+    iminutes = 3
+CODE:
+    RETVAL = THIS->imin();
+OUTPUT:
+    RETVAL
+
+
+double
+PDateInt::min ()
+ALIAS:
+    mins    = 1
+    minute  = 2
+    minutes = 3
+CODE:
+    RETVAL = THIS->min();
+OUTPUT:
+    RETVAL
+
+
+int64_t
+PDateInt::ihour ()
+ALIAS:
+    ihours = 1
+CODE:
+    RETVAL = THIS->ihour();
+OUTPUT:
+    RETVAL
+
+
+double
+PDateInt::hour ()
+ALIAS:
+    hours = 1
+CODE:
+    RETVAL = THIS->hour();
+OUTPUT:
+    RETVAL
+
+
+int64_t
+PDateInt::iday ()
+ALIAS:
+    idays = 1
+CODE:
+    RETVAL = THIS->iday();
+OUTPUT:
+    RETVAL
+
+
+double
+PDateInt::day ()
+ALIAS:
+    days = 1
+CODE:
+    RETVAL = THIS->day();
+OUTPUT:
+    RETVAL
+
+
+int64_t
+PDateInt::imonth ()
+ALIAS:
+    imon    = 1
+    imons   = 2
+    imonths = 3
+CODE:
+    RETVAL = THIS->imonth();
+OUTPUT:
+    RETVAL
+
+
+double
+PDateInt::month ()
+ALIAS:
+    mon    = 1
+    mons   = 2
+    months = 3
+CODE:
+    RETVAL = THIS->month();
+OUTPUT:
+    RETVAL
+
+
+int64_t
+PDateInt::iyear ()
+ALIAS:
+    iyears = 1
+CODE:
+    RETVAL = THIS->iyear();
+OUTPUT:
+    RETVAL
+
+
+double
+PDateInt::year ()
+ALIAS:
+    years = 1
+CODE:
+    RETVAL = THIS->year();
+OUTPUT:
+    RETVAL
+
+
+PDateRel*
+PDateInt::relative ()
+CODE:
+    RETVAL = THIS->relative();
+    const char* CLASS = PDATE_REL_CLASS;
+OUTPUT:
+    RETVAL
+
+
+bool
+PDateInt::to_bool (...)
+CODE:
+    RETVAL = THIS->duration() > 0;
+OUTPUT:
+    RETVAL
+
+
+uint64_t
+PDateInt::to_number (...)
+CODE:
+    RETVAL = THIS->duration();
+OUTPUT:
+    RETVAL
+
+
+int
+PDateInt::compare (SV* arg, bool reverse)
+CODE:
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, PDATE_INT_CLASS)) RETVAL = THIS->compare((PDateInt *) SvIV(SvRV(arg)));
+        else croak("Panda::Date: cannot '<=>' - object isn't a Panda::Date::Int object");
+    }
+    else if (looks_like_number(arg)) {
+        RETVAL = num_compare(THIS->duration(), SvIV(arg));
+    }
+    else {
+        static PDateInt acc;
+        acc.setFrom(arg);
+        RETVAL = THIS->compare(&acc);
+    }
+    
+    if (reverse) RETVAL *= -1;
+OUTPUT:
+    RETVAL
+
+
+bool
+PDateInt::equals (SV* arg, ...)
+CODE:
+    static PDateInt acc;
+    PDateInt* operand;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, PDATE_INT_CLASS)) operand = (PDateInt *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot 'eq' - object isn't a Panda::Date::Int object");
+    }
+    else {
+        acc.setFrom(arg);
+        operand = &acc;
+    }
+    
+    RETVAL = THIS->equals(operand);
+OUTPUT:
+    RETVAL
+
+
+PDateInt*
+PDateInt::add (SV* arg, ...)
+CODE:
+    static PDateRel acc;
+    PDateRel* operand = NULL;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '+' - object isn't a Panda::Date::Rel object");
+    }
+    else {
+        acc.setFrom(arg);
+        operand = &acc;
+    }
+    const char* CLASS = PDATE_INT_BLESS;
+    RETVAL = THIS->add(operand);
+OUTPUT:
+    RETVAL
+
+
+SV*
+PDateInt::add_me (SV* arg, ...)
+PPCODE:
+    static PDateRel acc;
+    PDateRel* operand = NULL;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '+=' - object isn't a Panda::Date::Rel object");
+    }
+    else {
+        acc.setFrom(arg);
+        operand = &acc;
+    }
+
+    THIS->addME(operand);
+    XSRETURN(1);
+
+
+PDateInt*
+PDateInt::subtract (SV* arg, bool reverse)
+CODE:
+    if (reverse) croak("Panda::Date: cannot subtract Interval from something");
+    static PDateRel acc;
+    PDateRel* operand = NULL;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '+' - object isn't a Panda::Date::Rel object");
+    }
+    else {
+        acc.setFrom(arg);
+        operand = &acc;
+    }
+    const char* CLASS = PDATE_INT_BLESS;
+    RETVAL = THIS->subtract(operand);
+OUTPUT:
+    RETVAL
+
+
+SV*
+PDateInt::subtract_me (SV* arg, ...)
+PPCODE:
+    static PDateRel acc;
+    PDateRel* operand = NULL;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '+=' - object isn't a Panda::Date::Rel object");
+    }
+    else {
+        acc.setFrom(arg);
+        operand = &acc;
+    }
+
+    THIS->subtractME(operand);
+    XSRETURN(1);
+
+
+PDateInt*
+PDateInt::negative (...)
+CODE:
+    const char* CLASS = PDATE_INT_BLESS;
+    RETVAL = THIS->negative();
+OUTPUT:
+    RETVAL
+
+
+PDateInt*
+PDateInt::negative_me ()
+PPCODE:
+    THIS->negativeME();
+    XSRETURN(1);
+
+
+void
+PDateInt::DESTROY ()

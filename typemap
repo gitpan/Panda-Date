@@ -1,0 +1,4 @@
+TYPEMAP
+PDate*         EO_OBJECT
+PDateRel*      EO_OBJECT
+PDateInt*      EO_OBJECT
