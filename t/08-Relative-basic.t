@@ -42,7 +42,7 @@ ok($rel->sec == 6 and $rel->min == 5 and $rel->hour == 4 and $rel->day == 3 and 
 ok($rel eq "1Y 2M 3D 4h 5m 6s");
 
 $rel = new Panda::Date::Rel "6s";
-ok($rel eq "6s" and $rel->sec == 6 and $rel->to_sec == 6 and $rel->to_min == 0.1);
+ok($rel eq "6s" and $rel->sec == 6 and $rel->to_sec == 6 and abs($rel->to_min - 0.1) < 0.000001);
 
 $rel = new Panda::Date::Rel "5m";
 ok($rel eq "5m" and $rel->min == 5 and $rel->to_sec == 300);
