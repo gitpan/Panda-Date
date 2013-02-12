@@ -6,6 +6,7 @@ name     'Panda-Date';
 all_from 'lib/Panda/Date.pm';
 
 requires 'Panda::Export';
+test_requires 'Test::Deep';
 
 #FIX FOR SYMLINK 'abstract'
 ExtUtils::Manifest::mkmanifest();
