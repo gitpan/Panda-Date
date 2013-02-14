@@ -13,7 +13,7 @@ ok($i->duration == 0 and $i->sec == 0 and $i->min == 0 and $i->hour == 0 and $i-
 
 $i = idate(1000000000, 1100000000);
 ok($i->from == "2001-09-09 05:46:40" and $i->till == "2004-11-09 14:33:20");
-ok($i->to_string eq "2001-09-09 05:46:40 - 2004-11-09 14:33:20");
+ok($i->to_string eq "2001-09-09 05:46:40 ~ 2004-11-09 14:33:20");
 ok($i.'' eq $i->to_string and $i->string eq $i->to_string and $i->as_string eq $i->to_string and $i.'' eq "$i");
 ok($i->duration == 100000000 and $i->sec == 100000000 and $i->secs == $i->sec and $i->second == $i->sec and $i->seconds == $i->sec);
 ok($i->imin == 1666666 and $i->imins == $i->imin and $i->iminute == $i->imin and $i->iminutes == $i->imin);

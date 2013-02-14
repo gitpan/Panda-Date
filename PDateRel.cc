@@ -11,9 +11,10 @@ PDateRel::PDateRel (PDateRel* from) {
     _year  = from->year();
 }
 
-PDateRel::PDateRel (SV* arg) { setFrom(arg); }
+PDateRel::PDateRel (SV* arg)                          { setFrom(arg); }
 PDateRel::PDateRel (struct tm &from, struct tm &till) { setFrom(from, till); }
-PDateRel::PDateRel (SV* fromSV, SV* tillSV) { setFrom(fromSV, tillSV); }
+PDateRel::PDateRel (SV* fromSV, SV* tillSV)           { setFrom(fromSV, tillSV); }
+PDateRel::PDateRel (const char* str, size_t len)      { setFrom(str, len); }
 
 void PDateRel::setFrom (SV* fromSV, SV* tillSV) {
     static PDate from((time_t) 0);

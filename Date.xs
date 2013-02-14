@@ -683,6 +683,24 @@ PPCODE:
     XSRETURN(1);
 
 
+const char*
+PDate::STORABLE_freeze (bool cloning)
+CODE:
+    RETVAL = THIS->toString();
+OUTPUT:
+    RETVAL
+
+
+PDate*
+STORABLE_attach (const char* CLASS, bool cloning, SV* serialized)
+CODE:
+    STRLEN len;
+    const char* str = SvPV(serialized, len);
+    RETVAL = new PDate(str, len);
+OUTPUT:
+    RETVAL
+
+
 void
 PDate::DESTROY ()
 

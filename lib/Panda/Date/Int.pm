@@ -19,9 +19,6 @@ use overload '""'     => \&to_string,
              'neg'    => \&negative,
              fallback => 1;
 
-sub to_string { $_[0]->from.' - '.$_[0]->till }
-*string = *as_string = *string = *to_string;
-
 =head1 DESCRIPTION
 
 Interval date is a length of time bound to particular point in time. Interval date consists of start date and end date.
@@ -32,11 +29,19 @@ Interval date is a length of time bound to particular point in time. Interval da
 
 Creates interval object from 2 dates. Input data can be anything that date() constructor supports.
 
+=head4 new($stringified | \@from_till)
+
+Creates interval object from it's stringified form (->to_string) or array with from and till dates.
+
 =head1 OBJECT METHODS
 
 =head4 set_from($date | $epoch | \@ymdhms | \%ymdhms | $sql_fmt, $date | $epoch | \@ymdhms | \%ymdhms | $sql_fmt)
 
 Set interval from data. This is much faster than creating new object.
+
+=head4 set_from($stringified | \@from_till)
+
+Set interval from stringified form or array with from and till dates.
 
 =head4 from([$from])
 
@@ -95,6 +100,11 @@ Converts interval to accurate number of years between from() and till().
 
 Returns L<Panda::Date::Rel> that equals till() minus from(). Keep in mind that ->duration not always equal to ->relative->duration !
 But from() + relative() always equals till()
+
+=head4 "", to_string(), string(), as_string()
+
+Returns string in "<LOWER DATE> ~ <UPPER DATE>" format, for example "2012-01-01 03:04:05 ~ 2013-02-03 05:06:14".
+If any of 'till' or 'from' dates have error, returns undef.
 
 =head4 '+', add($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 

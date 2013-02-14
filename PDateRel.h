@@ -48,6 +48,7 @@ public:
     PDateRel  (SV*);
     PDateRel  (SV*, SV*);
     PDateRel  (struct tm&, struct tm&);
+    PDateRel  (const char*, size_t);
     ~PDateRel ();
     
     int64_t sec   ();

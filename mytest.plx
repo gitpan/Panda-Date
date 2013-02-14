@@ -8,7 +8,7 @@ use POSIX;
 use Panda::Date qw/now today date rdate :const idate/;
 use Class::Date;
 use Data::Dumper qw/Dumper/;
-use Storable;
+use Storable qw/freeze nfreeze thaw dclone/;
 use JSON::XS;
 say "START";
 
@@ -16,12 +16,16 @@ my $cdate = new Class::Date("2013-06-05 23:45:56");
 my $date  = new Panda::Date("2013-06-05 23:45:56");
 my $crel = Class::Date::Rel->new("1M");
 my $rel  = rdate("1M");
+my $idate = idate("2013-06-05 23:45:56", "2014-07-06 23:45:56");
+1;
+
+my @buff;
 
 timethese(-1, {
-    cdate_new_str   => sub { new Class::Date("2013-01-25 21:26:43"); },
-    panda_new_str   => sub { new Panda::Date("2013-01-25 21:26:43"); },
-    cdate_new_epoch => sub { new Class::Date(1000000000); },
-    panda_new_epoch => sub { new Panda::Date(1000000000); },
+    cdate_new_str   => sub { push @buff, new Class::Date("2013-01-25 21:26:43"); }, # push @buff to avoid calling DESTROY
+    panda_new_str   => sub { push @buff, new Panda::Date("2013-01-25 21:26:43"); },
+    cdate_new_epoch => sub { push @buff, new Class::Date(1000000000); },
+    panda_new_epoch => sub { push @buff, new Panda::Date(1000000000); },
     panda_new_reuse => sub { state $date = new Panda::Date(0); $date->set_from(1000000000); },
     
     cdate_now => sub { Class::Date->now; },

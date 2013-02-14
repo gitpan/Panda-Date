@@ -9,7 +9,8 @@ void PDate::eCheck () { if (!_hasEpoch && _hasData) eSync(); }
 void PDate::eSync  () { // this function is heavy
     _hasEpoch = true;
     _hasFullData = true;
-    _epoch = timelocal(&_data);
+    _data.tm_isdst = -1;
+    _epoch = mktime(&_data);
 }
 
 void PDate::dNorm () { dNorm(0); }
@@ -177,6 +178,7 @@ void PDate::setFrom (AV* from) {
 }
 
 void PDate::setFrom (HV* from, bool cloning) {
+    _error = E_OK;
     if (cloning) dCheck();
     SV** ref;
     
@@ -219,6 +221,7 @@ void PDate::setFrom (HV* from, bool cloning) {
 }
 
 void PDate::setFrom (int32_t year, int32_t month, int32_t day, int32_t hour, int32_t min, int32_t sec) {
+    _error        = E_OK;
     _data.tm_year = year - 1900;
     _data.tm_mon  = month - 1;
     _data.tm_mday = day;
@@ -246,12 +249,12 @@ void PDate::setFrom (const char* str, size_t len) {
 }
 
 void PDate::setFrom (PDate* from) {
+    _error       = from->error();
     _hasEpoch    = from->hasEpoch();
     _hasData     = from->hasData();
     _hasFullData = from->hasFullData();
     if (_hasEpoch) _epoch = from->epoch();
     if (_hasData) _data = *(from->data());
-    _error = from->error();
 }
 
 const char* PDate::toString () {

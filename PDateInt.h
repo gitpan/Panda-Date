@@ -28,16 +28,22 @@ private:
 public: 
     PDateInt  ();
     PDateInt  (PDate*, PDate*);
+    PDateInt  (SV*);
     PDateInt  (SV*, SV*);
     ~PDateInt ();
     
     void setFrom (SV*);
     void setFrom (SV*, SV*);
+    bool setFrom (const char*, size_t);
+
+    bool hasError ();
     
     PDate* from ();
     void   from (SV*);
     PDate* till ();
     void   till (SV*);
+    
+    const char* toString();
     
     int64_t  duration ();
     int64_t  sec      ();

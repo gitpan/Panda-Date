@@ -1,14 +1,15 @@
 #include "PDateInt.h"
 
-PDateInt::PDateInt ()             : _from((time_t) 0), _till((time_t) 0) {}
-PDateInt::PDateInt (PDate* from, PDate* till) : _from(from), _till(till) {}
-PDateInt::PDateInt (SV* from, SV* till)       : _from(from), _till(till) {}
+PDateInt::PDateInt ()                         : _from((time_t) 0), _till((time_t) 0) {}
+PDateInt::PDateInt (PDate* from, PDate* till) : _from(from), _till(till)             {}
+PDateInt::PDateInt (SV* from, SV* till)       : _from(from), _till(till)             {}
+PDateInt::PDateInt (SV* arg)                  : _from((time_t) 0), _till((time_t) 0) { setFrom(arg); }
 
-void PDateInt::setFrom (SV* argref) {
-    if (SvOK(argref) && SvROK(argref)) {
-        SV* arg = SvRV(argref);
-        if (SvTYPE(arg) == SVt_PVAV) {
-            AV* arr = (AV*) arg;
+void PDateInt::setFrom (SV* arg) {
+    if (SvOK(arg) && SvROK(arg)) {
+        SV* argval = SvRV(arg);
+        if (SvTYPE(argval) == SVt_PVAV) {
+            AV* arr = (AV*) argval;
             SV** elemref1 = av_fetch(arr, 0, 0);
             SV** elemref2 = av_fetch(arr, 1, 0);
             if (elemref1 != NULL && elemref2 != NULL) {
@@ -18,13 +19,43 @@ void PDateInt::setFrom (SV* argref) {
             }
         }
     }
-    croak("Panda::Date: cannot create Panda::Date::Int object - wrong argument");
+    else if (SvPOK(arg)) {
+        STRLEN len;
+        const char* str = SvPV(arg, len);
+        if (setFrom(str, len)) return;
+    }
+    
+    croak("Panda::Date: cannot set Panda::Date::Int object - wrong argument");
 }
 
 void PDateInt::setFrom (SV* fromSV, SV* tillSV) {
     _from.setFrom(fromSV);
     _till.setFrom(tillSV);
 }
+
+bool PDateInt::setFrom (const char* str, size_t len) {
+    char* ptr = (char*) str;
+    char* from_str = strsep(&ptr, "~");
+    if (ptr == NULL || ptr >= str + len - 1) return false;
+    _from.setFrom(from_str, strlen(from_str));
+    _till.setFrom(ptr+1, strlen(ptr)-1);
+    return true;
+}
+
+const char* PDateInt::toString () {
+    if (hasError()) return NULL;
+    static char str[100];
+    char* ptr = str;
+    const char* src = _from.toString();
+    while (*src) *(ptr++) = *(src++);
+    *(ptr++) = ' '; *(ptr++) = '~'; *(ptr++) = ' ';
+    src = _till.toString();
+    while (*src) *(ptr++) = *(src++);
+    *(ptr++) = 0;
+    return str;
+}
+
+bool PDateInt::hasError () { return _from.error() != E_OK || _till.error() != E_OK; }
 
 PDate* PDateInt::from ()        { return &_from; }
 void   PDateInt::from (SV* arg) { _from.setFrom(arg); }
@@ -35,7 +66,7 @@ int64_t PDateInt::hmsDiff () {
     return (_till.hour() - _from.hour())*3600 + (_till.min() - _from.min())*60 + _till.sec() - _from.sec();
 }
 
-int64_t PDateInt::duration () { return _till.epoch() - _from.epoch(); }
+int64_t PDateInt::duration () { return hasError() ? 0 : (_till.epoch() - _from.epoch()); }
 int64_t PDateInt::sec      () { return duration(); }
 int64_t PDateInt::imin     () { return duration()/60; }
 double  PDateInt::min      () { return (double) duration()/60; }

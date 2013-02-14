@@ -4,7 +4,7 @@ use 5.012;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '1.2';
+our $VERSION = '1.3';
 
 =head1 NAME
 
@@ -701,22 +701,30 @@ Subclassing is manually turned off because enabling it will drop 20% perfomance 
 
 If you subclass Panda::Date it won't work correct.
 
+=item As any other C++-class-based framework, you can't clone Panda::Date::* objects using serializers or clone utils.
+
+You will receive SIGSEGV. If you want to clone a Panda::Date::* object, use it's clone() method.
+
+However, cloning and serializing/deserializing via L<Storable> is supported as Panda::Date::* classes define special hooks for Storable.
+But it's about 20 times slower than using clone() method.
+
 =back
 
 =head1 PERFOMANCE
 
-Perfomance is extremely great compared to Class::Date (and to DateTime especially)
+Panda::Date operates 40-70x faster than Class::Date
 
     my $cdate = new Class::Date("2013-06-05 23:45:56");
     my $date  = new Panda::Date("2013-06-05 23:45:56");
     my $crel = Class::Date::Rel->new("1M");
     my $rel  = rdate("1M");
+    my @buff;
     
     timethese(-1, {
-        cdate_new_str   => sub { new Class::Date("2013-01-25 21:26:43"); },
-        panda_new_str   => sub { new Panda::Date("2013-01-25 21:26:43"); },
-        cdate_new_epoch => sub { new Class::Date(1000000000); },
-        panda_new_epoch => sub { new Panda::Date(1000000000); },
+        cdate_new_str   => sub { push @buff, new Class::Date("2013-01-25 21:26:43"); }, # push @buff to avoid calling DESTROY
+        panda_new_str   => sub { push @buff, new Panda::Date("2013-01-25 21:26:43"); },
+        cdate_new_epoch => sub { push @buff, new Class::Date(1000000000); },
+        panda_new_epoch => sub { push @buff, new Panda::Date(1000000000); },
         panda_new_reuse => sub { state $date = new Panda::Date(0); $date->set_from(1000000000); },
         
         cdate_now => sub { Class::Date->now; },
@@ -752,9 +760,9 @@ Perfomance is extremely great compared to Class::Date (and to DateTime especiall
     #RESULTS
     
     #cdate_new_epoch:  2 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 45386.90/s (n=47869)
-    #panda_new_epoch:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 841364.06/s (n=880803)
+    #panda_new_epoch:  2 wallclock secs ( 1.06 usr +  0.03 sys =  1.09 CPU) @ 1006632.23/s (n=1101004)
     #cdate_new_str:  1 wallclock secs ( 1.10 usr +  0.00 sys =  1.10 CPU) @ 15616.91/s (n=17203)
-    #panda_new_str:  1 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 742706.09/s (n=800730)
+    #panda_new_str:  0 wallclock secs ( 0.98 usr +  0.09 sys =  1.07 CPU) @ 866252.61/s (n=927161)
     #panda_new_reuse:  2 wallclock secs ( 1.02 usr +  0.00 sys =  1.02 CPU) @ 7247433.28/s (n=7417295)
     
     #cdate_now:  1 wallclock secs ( 1.02 usr +  0.05 sys =  1.07 CPU) @ 41146.86/s (n=44040)

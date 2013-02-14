@@ -3,9 +3,11 @@ PROTOTYPES: DISABLE
 #///////////////////////////// STATIC FUNCTIONS ///////////////////////////////////
 
 PDateInt *
-idate (SV* from, SV* till)
+idate (...)
 CODE:
-    RETVAL = new PDateInt(from, till);
+    if (items > 1)      RETVAL = new PDateInt(ST(0), ST(1));
+    else if (items > 0) RETVAL = new PDateInt(ST(0));
+    else croak("Panda::Date: not enough arguments in Panda::Date::Int's constructor");
     const char* CLASS = PDATE_INT_CLASS;
 OUTPUT:
     RETVAL
@@ -15,17 +17,33 @@ MODULE = Panda::Date                PACKAGE = Panda::Date::Int
 PROTOTYPES: DISABLE
 
 PDateInt *
-PDateInt::new (SV* from, SV* till)
+PDateInt::new (...)
 CODE:
-    RETVAL = new PDateInt(from, till);
+    if (items > 2)      RETVAL = new PDateInt(ST(1), ST(2));
+    else if (items > 1) RETVAL = new PDateInt(ST(1));
+    else croak("Panda::Date: not enough arguments in Panda::Date::Int's constructor");
 OUTPUT:
     RETVAL
 
 
 void
-PDateInt::set_from (SV* from, SV* till)
+PDateInt::set_from (...)
 PPCODE:
-    THIS->setFrom(from, till);
+    if (items > 2)      THIS->setFrom(ST(1), ST(2));
+    else if (items > 1) THIS->setFrom(ST(1));
+    else croak("Panda::Date: not enough arguments in Panda::Date::Int's constructor");
+
+
+const char*
+PDateInt::to_string (...)
+ALIAS:
+    as_string = 1
+    string    = 2
+CODE:
+    RETVAL = THIS->toString();
+    if (RETVAL == NULL) XSRETURN_UNDEF;
+OUTPUT:
+    RETVAL
 
 
 PDate*
@@ -323,6 +341,22 @@ PDateInt::negative_me ()
 PPCODE:
     THIS->negativeME();
     XSRETURN(1);
+
+
+const char*
+PDateInt::STORABLE_freeze (bool cloning)
+CODE:
+    RETVAL = THIS->toString();
+OUTPUT:
+    RETVAL
+
+
+PDateInt*
+STORABLE_attach (const char* CLASS, bool cloning, SV* serialized)
+CODE:
+    RETVAL = new PDateInt(serialized);
+OUTPUT:
+    RETVAL
 
 
 void
