@@ -4,7 +4,7 @@ use 5.012;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '1.3';
+our $VERSION = '1.4';
 
 =head1 NAME
 
@@ -34,12 +34,12 @@ XSLoader::load('Panda::Date', $VERSION);
 
 # can't place this into compile-time code because there is no XS code at that time.
 Panda::Export->import({
-    SEC          => rdate("1s"),
-    MIN          => rdate("1m"),
-    HOUR         => rdate("1h"),
-    DAY          => rdate("1D"),
-    MONTH        => rdate("1M"),
-    YEAR         => rdate("1Y"),
+    SEC          => rdate_const("1s"),
+    MIN          => rdate_const("1m"),
+    HOUR         => rdate_const("1h"),
+    DAY          => rdate_const("1D"),
+    MONTH        => rdate_const("1M"),
+    YEAR         => rdate_const("1Y"),
 });
 
 =head1 DESCRIPTION
@@ -608,27 +608,29 @@ Invalid date (or date part) supplied when range_check() is in effect
 
 =head4 YEAR
 
-Same as Panda::Date::Rel->new("1Y"). You should never change these objects.
+Constant for rdate("1Y"). These (YEAR...SEC) objects are constants (read-only).
+
+If you try to change these objects you'll get an exception.
 
 =head4 MONTH
 
-Same as Panda::Date::Rel->new("1M").
+Constant for rdate("1M").
 
 =head4 DAY
 
-Same as Panda::Date::Rel->new("1D").
+Constant for rdate("1D").
 
 =head4 HOUR
 
-Same as Panda::Date::Rel->new("1h").
+Constant for rdate("1h").
 
 =head4 MIN
 
-Same as Panda::Date::Rel->new("1m").
+Constant for rdate("1m").
 
 =head4 SEC
 
-Same as Panda::Date::Rel->new("1s").
+Constant for rdate("1s").
 
 =head1 OPERATOR OVERLOAD RULES
 

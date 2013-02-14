@@ -11,6 +11,18 @@ CODE:
     const char* CLASS = PDATE_REL_CLASS;
 OUTPUT:
     RETVAL
+    
+
+PDateRel *
+rdate_const (...)
+CODE:
+    RETVAL = items > 1 ?
+                new PDateRel(ST(0), ST(1)) : 
+                (items > 0 ? new PDateRel(ST(0)) : new PDateRel());
+    RETVAL->constOn();
+    const char* CLASS = PDATE_REL_CLASS;
+OUTPUT:
+    RETVAL    
 
 #///////////////////////////// OBJECT METHODS ///////////////////////////////////
 MODULE = Panda::Date                PACKAGE = Panda::Date::Rel
@@ -400,6 +412,12 @@ CODE:
     RETVAL = new PDateRel(str, len);
 OUTPUT:
     RETVAL
+
+
+void
+PDateRel::const_on ()
+PPCODE:
+    THIS->constOn();
 
 
 void

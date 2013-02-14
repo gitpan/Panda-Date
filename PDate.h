@@ -79,6 +79,8 @@ private:
     void dCheckFull ();
     void dSync      ();
 
+    PDate* _addsubME (PDateRel*, bool);
+
 public: 
     static SV*         strfmtSV;
     static const char* strfmt;

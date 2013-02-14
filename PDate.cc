@@ -371,21 +371,21 @@ int PDate::compare (PDate* operand) {
     else return tm_compare(*(data()), *(operand->data()));
 }
 
-PDate* PDate::add   (PDateRel* operand) { return clone()->addME(operand); }
-PDate* PDate::addME (PDateRel* operand) {
+PDate* PDate::_addsubME (PDateRel* operand, bool subtract) {
     dCheck();
+    int sign = subtract ? -1 : 1;
     // process year/month separately from DHMS to allow monthBorderAdjust to work correctly
     if (operand->hasMPart()) {
-        _data.tm_mon  += operand->month();
-        _data.tm_year += operand->year();
+        _data.tm_mon  += sign*operand->month();
+        _data.tm_year += sign*operand->year();
         dNorm(monthBorderAdjust ? NORM_MBA : 0);
     }
     
     if (operand->hasSPart()) {
-        _data.tm_sec  += operand->sec();
-        _data.tm_min  += operand->min();
-        _data.tm_hour += operand->hour();
-        _data.tm_mday += operand->day();
+        _data.tm_sec  += sign*operand->sec();
+        _data.tm_min  += sign*operand->min();
+        _data.tm_hour += sign*operand->hour();
+        _data.tm_mday += sign*operand->day();
         dNorm();
     }
     
@@ -393,13 +393,10 @@ PDate* PDate::addME (PDateRel* operand) {
     return this;
 }
 
+PDate* PDate::add        (PDateRel* operand) { return clone()->addME(operand); }
+PDate* PDate::addME      (PDateRel* operand) { return _addsubME(operand, false); }
 PDate* PDate::subtract   (PDateRel* operand) { return clone()->subtractME(operand); }
-PDate* PDate::subtractME (PDateRel* operand) {
-    operand->negativeME();
-    addME(operand);
-    operand->negativeME();
-    return this;
-}
+PDate* PDate::subtractME (PDateRel* operand) { return _addsubME(operand, true); }
 
 PDate::~PDate () {}
 

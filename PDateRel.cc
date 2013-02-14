@@ -1,8 +1,8 @@
 #include "PDateRel.h"
 
-PDateRel::PDateRel () : _sec(0), _min(0), _hour(0), _day(0), _month(0), _year(0) {};
+PDateRel::PDateRel () : _sec(0), _min(0), _hour(0), _day(0), _month(0), _year(0), _isConst(false) {};
 
-PDateRel::PDateRel (PDateRel* from) {
+PDateRel::PDateRel (PDateRel* from) : _isConst(false) {
     _sec   = from->sec();
     _min   = from->min();
     _hour  = from->hour();
@@ -11,10 +11,12 @@ PDateRel::PDateRel (PDateRel* from) {
     _year  = from->year();
 }
 
-PDateRel::PDateRel (SV* arg)                          { setFrom(arg); }
-PDateRel::PDateRel (struct tm &from, struct tm &till) { setFrom(from, till); }
-PDateRel::PDateRel (SV* fromSV, SV* tillSV)           { setFrom(fromSV, tillSV); }
-PDateRel::PDateRel (const char* str, size_t len)      { setFrom(str, len); }
+PDateRel::PDateRel (SV* arg)                          : _isConst(false) { setFrom(arg); }
+PDateRel::PDateRel (struct tm &from, struct tm &till) : _isConst(false) { setFrom(from, till); }
+PDateRel::PDateRel (SV* fromSV, SV* tillSV)           : _isConst(false) { setFrom(fromSV, tillSV); }
+PDateRel::PDateRel (const char* str, size_t len)      : _isConst(false) { setFrom(str, len); }
+
+void PDateRel::constOn () { _isConst = true; }
 
 void PDateRel::setFrom (SV* fromSV, SV* tillSV) {
     static PDate from((time_t) 0);
@@ -25,6 +27,7 @@ void PDateRel::setFrom (SV* fromSV, SV* tillSV) {
 }
 
 void PDateRel::setFrom (struct tm &from, struct tm &till) {
+    CHECK_CONST;
     _sec = 0, _min = 0, _hour = 0, _day = 0, _month = 0, _year = 0;
     bool reverse = false;
     if (tm_compare(from, till) > 0) {
@@ -62,6 +65,7 @@ void PDateRel::setFrom (struct tm &from, struct tm &till) {
 }
 
 void PDateRel::setFrom (SV* arg) {
+    CHECK_CONST;
     _sec = 0; _min = 0; _hour = 0; _day = 0; _month = 0; _year = 0;
     if (!SvOK(arg)) return;
     if (SvROK(arg)) {
@@ -84,6 +88,7 @@ void PDateRel::setFrom (SV* arg) {
 }
 
 void PDateRel::setFrom (PDateRel* from) {
+    CHECK_CONST;
     _sec   = from->sec();
     _min   = from->min();
     _hour  = from->hour();
@@ -93,19 +98,20 @@ void PDateRel::setFrom (PDateRel* from) {
 }
 
 int64_t PDateRel::sec   ()            { return _sec; }
-void    PDateRel::sec   (int64_t val) { _sec = val; }
+void    PDateRel::sec   (int64_t val) { CHECK_CONST; _sec = val; }
 int64_t PDateRel::min   ()            { return _min; }
-void    PDateRel::min   (int64_t val) { _min = val; }
+void    PDateRel::min   (int64_t val) { CHECK_CONST; _min = val; }
 int64_t PDateRel::hour  ()            { return _hour; }
-void    PDateRel::hour  (int64_t val) { _hour = val; }
+void    PDateRel::hour  (int64_t val) { CHECK_CONST; _hour = val; }
 int64_t PDateRel::day   ()            { return _day; }
-void    PDateRel::day   (int64_t val) { _day = val; }
+void    PDateRel::day   (int64_t val) { CHECK_CONST; _day = val; }
 int64_t PDateRel::month ()            { return _month; }
-void    PDateRel::month (int64_t val) { _month = val; }
+void    PDateRel::month (int64_t val) { CHECK_CONST; _month = val; }
 int64_t PDateRel::year  ()            { return _year; }
-void    PDateRel::year  (int64_t val) { _year = val; }
+void    PDateRel::year  (int64_t val) { CHECK_CONST; _year = val; }
 
 void PDateRel::setFrom (HV* from) {
+    CHECK_CONST;
     SV** ref;
     ref = hv_fetch(from, "year", 4, 0);
     if (ref != NULL) _year = SvIV(*ref);
@@ -122,6 +128,7 @@ void PDateRel::setFrom (HV* from) {
 }
 
 void PDateRel::setFrom (AV* from) {
+    CHECK_CONST;
     I32 len = av_len(from)+1;
     SV** ref;
     if (len > 0) { ref = av_fetch(from, 0, 0); if (ref != NULL) _year  = SvIV(*ref); }
@@ -133,6 +140,7 @@ void PDateRel::setFrom (AV* from) {
 }
 
 void PDateRel::setFrom (const char* str, size_t len) {
+    CHECK_CONST;
     struct tm data;
     uint8_t error = parse_relative(str, len, data);
     if (error != E_OK) return;
@@ -170,6 +178,7 @@ PDateRel* PDateRel::clone () { return new PDateRel(this); }
 
 PDateRel* PDateRel::multiply   (double koef) { return clone()->multiplyME(koef); }
 PDateRel* PDateRel::multiplyME (double koef) {
+    CHECK_CONST; 
     if (fabs(koef) < 1 && koef != 0) return divideME(1/koef);
     _sec   *= koef;
     _min   *= koef;
@@ -182,6 +191,7 @@ PDateRel* PDateRel::multiplyME (double koef) {
 
 PDateRel* PDateRel::divide   (double koef) { return clone()->divideME(koef); }
 PDateRel* PDateRel::divideME (double koef) {
+    CHECK_CONST;
     if (fabs(koef) <= 1) return multiplyME(1/koef);
     double td;
     int64_t tmp;
@@ -247,6 +257,7 @@ PDateRel* PDateRel::divideME (double koef) {
 
 PDateRel* PDateRel::add   (PDateRel* operand) { return clone()->addME(operand); }
 PDateRel* PDateRel::addME (PDateRel* operand) {
+    CHECK_CONST;
     _sec   += operand->sec();
     _min   += operand->min();
     _hour  += operand->hour();
@@ -258,6 +269,7 @@ PDateRel* PDateRel::addME (PDateRel* operand) {
 
 PDateRel* PDateRel::subtract   (PDateRel* operand) { return clone()->subtractME(operand); }
 PDateRel* PDateRel::subtractME (PDateRel* operand) {
+    CHECK_CONST;
     _sec   -= operand->sec();
     _min   -= operand->min();
     _hour  -= operand->hour();
@@ -269,6 +281,7 @@ PDateRel* PDateRel::subtractME (PDateRel* operand) {
 
 PDateRel* PDateRel::negative   () { return clone()->negativeME(); }
 PDateRel* PDateRel::negativeME () {
+    CHECK_CONST;
     _sec   = -_sec;
     _min   = -_min;
     _hour  = -_hour;

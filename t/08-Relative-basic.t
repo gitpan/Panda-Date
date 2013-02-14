@@ -2,7 +2,7 @@ use 5.012;
 use warnings;
 use Test::More;
 use POSIX qw(setlocale LC_ALL); setlocale(LC_ALL, 'en_US.UTF-8'); $ENV{TZ} = 'Europe/Moscow'; POSIX::tzset();
-use Panda::Date qw/rdate :const/;
+use Panda::Date qw/rdate rdate_const :const/;
 
 my $rel;
 
@@ -97,5 +97,28 @@ ok(HOUR eq "1h");
 ok(DAY eq '1D');
 ok(MONTH eq '1M');
 ok(YEAR eq '1Y');
+
+my $rotest = rdate("1Y 1M 1D");
+$rotest->const_on;
+my $rotest2 = rdate_const("1M 1D 1h");
+foreach my $const (SEC, MIN, HOUR, DAY, MONTH, YEAR, $rotest, $rotest2) {
+    my $initial_str = $const->to_string;
+    ok(!eval { $const *= 10; 1 });
+    ok(!eval { $const /= 2; 1 });
+    ok(!eval { $const += '5D'; 1 });
+    ok(!eval { $const -= '1M'; 1 });
+    ok(!eval { $const->negative_me; 1 });
+    ok(!eval { $const->sec(0); 1 });
+    ok(!eval { $const->min(0); 1 });
+    ok(!eval { $const->hour(0); 1 });
+    ok(!eval { $const->day(0); 1 });
+    ok(!eval { $const->month(0); 1 });
+    ok(!eval { $const->year(0); 1 });
+    ok(!eval { $const->set_from(1024); 1 });
+    ok(!eval { $const->set_from("3h 4m 5s"); 1 });
+    ok(!eval { $const->set_from([1,2,3,4,5,6]); 1 });
+    ok(!eval { $const->set_from({year => 1000}); 1 });
+    ok($const->to_string eq $initial_str);
+}
 
 done_testing();

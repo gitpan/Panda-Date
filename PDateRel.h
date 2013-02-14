@@ -31,6 +31,8 @@
     *(ptr++) = 0;\
     return ret;
     
+#define CHECK_CONST if (_isConst) croak("Panda::Date: cannot change this Panda::Date::Rel object: it's read only")
+    
 class PDate;
 
 class PDateRel {
@@ -41,6 +43,7 @@ private:
     int64_t _day;
     int64_t _month;
     int64_t _year;
+    bool    _isConst;
 
 public: 
     PDateRel  ();
@@ -50,6 +53,8 @@ public:
     PDateRel  (struct tm&, struct tm&);
     PDateRel  (const char*, size_t);
     ~PDateRel ();
+    
+    void constOn ();
     
     int64_t sec   ();
     void    sec   (int64_t);

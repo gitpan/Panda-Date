@@ -1,3 +1,6 @@
+1.4  14.02.2013
+        - SEC, MIN, .., YEAR are now constant objects (read only) to avoid wrong usage
+
 1.3  14.02.2013
         - add Storable hooks
 
