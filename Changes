@@ -1,4 +1,4 @@
-1.4.1    15.02.2013
+1.5      15.02.2013
            - add mysql() output format
            - fix building on threaded perls
 
