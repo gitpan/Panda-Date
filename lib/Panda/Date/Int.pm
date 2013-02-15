@@ -25,7 +25,7 @@ Interval date is a length of time bound to particular point in time. Interval da
 
 =head1 CLASS METHODS
 
-=head4 new($date | $epoch | \@ymdhms | \%ymdhms | $sql_fmt, $date | $epoch | \@ymdhms | \%ymdhms | $sql_fmt)
+=head4 new($date | $epoch | \@ymdhms | \%ymdhms | $iso_fmt, $date | $epoch | \@ymdhms | \%ymdhms | $iso_fmt)
 
 Creates interval object from 2 dates. Input data can be anything that date() constructor supports.
 
@@ -35,7 +35,7 @@ Creates interval object from it's stringified form (->to_string) or array with f
 
 =head1 OBJECT METHODS
 
-=head4 set_from($date | $epoch | \@ymdhms | \%ymdhms | $sql_fmt, $date | $epoch | \@ymdhms | \%ymdhms | $sql_fmt)
+=head4 set_from($date | $epoch | \@ymdhms | \%ymdhms | $iso_fmt, $date | $epoch | \@ymdhms | \%ymdhms | $iso_fmt)
 
 Set interval from data. This is much faster than creating new object.
 

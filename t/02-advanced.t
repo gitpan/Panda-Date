@@ -8,6 +8,7 @@ use Panda::Date qw/now date today/;
 my $date;
 
 $date = Panda::Date->new("2013-09-05 3:4:5");
+ok($date->mysql eq "20130905030405");
 ok($date->hms eq '03:04:05');
 ok($date->ymd eq '2013/09/05');
 ok($date->mdy eq '09/05/2013');

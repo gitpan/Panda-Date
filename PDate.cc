@@ -235,7 +235,7 @@ void PDate::setFrom (int32_t year, int32_t month, int32_t day, int32_t hour, int
 }
 
 void PDate::setFrom (const char* str, size_t len) {
-    _error = parse_sql(str, len, _data);
+    _error = parse_iso(str, len, _data);
     
     if (_error != E_OK) {
         error(_error);
@@ -259,13 +259,19 @@ void PDate::setFrom (PDate* from) {
 
 const char* PDate::toString () {
     if (_error > E_OK) return NULL;
-    return strfmt == NULL ? sql() : strFtime(strfmt, NULL, 0);
+    return strfmt == NULL ? iso() : strFtime(strfmt, NULL, 0);
 }
 
-const char* PDate::sql () {
+const char* PDate::iso () {
     TOSTR_START(50);
     TOSTR_YEAR; TOSTR_DEL('-'); TOSTR_MONTH; TOSTR_DEL('-'); TOSTR_DAY; TOSTR_DEL(' ');
     TOSTR_HOUR; TOSTR_DEL(':'); TOSTR_MIN; TOSTR_DEL(':'); TOSTR_SEC;
+    TOSTR_END;
+}
+
+const char* PDate::mysql () {
+    TOSTR_START(45);
+    TOSTR_YEAR; TOSTR_MONTH; TOSTR_DAY; TOSTR_HOUR; TOSTR_MIN; TOSTR_SEC;
     TOSTR_END;
 }
 

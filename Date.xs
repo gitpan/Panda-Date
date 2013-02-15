@@ -298,9 +298,19 @@ OUTPUT:
 
 
 const char*
-PDate::sql ()
+PDate::iso ()
+ALIAS:
+    sql = 1
 CODE:
-    RETVAL = THIS->sql();
+    RETVAL = THIS->iso();
+OUTPUT:
+    RETVAL
+
+
+const char*
+PDate::mysql ()
+CODE:
+    RETVAL = THIS->mysql();
 OUTPUT:
     RETVAL
 

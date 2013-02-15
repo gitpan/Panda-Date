@@ -156,17 +156,18 @@ public:
     void setFrom (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
     void setFrom (const char*, size_t);
     void setFrom (PDate*);
-    void parseSQL (const char*, size_t);
+    void parseISO (const char*, size_t);
     void setFromSTRP (const char*, size_t);
     
     const char* toString ();
-    const char* sql ();
-    const char* hms ();
-    const char* ymd ();
-    const char* mdy ();
-    const char* dmy ();
+    const char* iso      ();
+    const char* mysql    ();
+    const char* hms      ();
+    const char* ymd      ();
+    const char* mdy      ();
+    const char* dmy      ();
     const char* meridiam ();
-    const char* ampm ();
+    const char* ampm     ();
     char*       strFtime (const char*, char*, size_t);
     
     PDate* clone        ();

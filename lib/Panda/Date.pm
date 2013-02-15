@@ -4,7 +4,7 @@ use 5.012;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '1.4';
+our $VERSION = '1.4.1';
 
 =head1 NAME
 
@@ -84,7 +84,7 @@ only [1900, 2**31-1] years are supported.
     print $reldate/2; # 1Y 5h 14m 32s
     $reldate = YEAR/2 + HOUR/2; # 6M 30m
     
-    $date;              # prints the date in default output format (SQL format)
+    $date;              # prints the date in default output format (ISO/SQL format)
     $date->epoch;       # unix timestamp
     $date->year;        # year, e.g: 2001
     $date->_year;       # year - 1900, e.g. 101
@@ -123,7 +123,7 @@ only [1900, 2**31-1] years are supported.
     $date->ampm         # AM/PM
     $date->string       # 2000-02-29 12:21:11 (format can be changed)
     "$date"             # same as prev.
-    $date->sql          # 2000-02-29 12:21:11
+    $date->iso          # 2000-02-29 12:21:11
     $date->tzoffset     # timezone-offset (in seconds)
     $date->tz           # returns the base timezone as you specify, eg: CET
     $date->tzdst        # returns the real timezone with dst information, eg: CEST
@@ -246,7 +246,7 @@ only [1900, 2**31-1] years are supported.
 
 =head1 CLASS METHODS
 
-=head4 new($epoch | \@ymdhms | \%ymdhms | $sql_fmt | $date)
+=head4 new($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
 
 Creates a date object using one of these source data types:
 
@@ -266,6 +266,7 @@ If some args are missing, will use defaults defined in previous section.
 
 =item "YYYY-MM-DD HH:MM:SS"
 
+A standard ISO(-like) date format. Additional ".fraction" part is ignored.
 Any number of trailing parameters can be missing. So the actual format is "YYYY-[MM[-DD[ HH[:MM[:SS[.MS]]]]]]"
 Minimal string is "YYYY-". Fractional part of seconds will be ignored.
 If some args are missing, will use defaults defined in previous section.
@@ -298,7 +299,7 @@ but runs much faster. Can be called as function, class method or object method.
 =head4 string_format([$format])
 
 strftime-compatible format that will be used to stringify the date with '.', "", to_string(), string() or as_string().
-If it's false (the default) then sql() will be used.
+If it's false (the default) then iso() will be used.
 
 =head4 month_border_adjust([$bool])
 
@@ -322,7 +323,7 @@ when range_check is set, then a date "2001-02-31" became invalid date and error(
 
 =head1 FUNCTIONS
 
-=head4 date($epoch | \@ymdhms | \%ymdhms | $sql_fmt | $date)
+=head4 date($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
 
 Same as
 
@@ -344,7 +345,7 @@ Same as
 
     Panda::Date::Rel->new(from, till);
     
-=head4 idate($epoch | \@ymdhms | \%ymdhms | $sql_fmt | $date, $epoch | \@ymdhms | \%ymdhms | $sql_fmt | $date)
+=head4 idate($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date, $epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
 
 Same as
 
@@ -353,7 +354,7 @@ Same as
 
 =head1 OBJECT METHODS
 
-=head4 set_from($epoch | \@ymdhms | \%ymdhms | $sql_fmt | $date)
+=head4 set_from($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
 
 Set date from data or another date. This is much faster than creating new object.
 
@@ -456,7 +457,7 @@ Same as strftime('%d/%m/%Y') but much faster
 
 =head4 "", to_string(), string(), as_string()
 
-By default returns sql(). String format can be changed via string_format()
+By default returns iso(). String format can be changed via string_format()
 
 =head4 'bool', to_bool()
 
@@ -472,9 +473,13 @@ Returns TRUE if date has no errors (i.e. has no parsing or out of range errors, 
 
 Returns epoch() in numeric context
 
-=head4 sql()
+=head4 iso(), sql()
 
 Same as strftime('%Y-%m-%d %H:%M:%S') but much faster
+
+=head4 mysql()
+
+Same as strftime('%Y%m%d%H%M%S') but much faster
 
 =head4 ampm()
 
@@ -569,7 +574,7 @@ Return copy of the current date with HMS set to 0. Same as ->clone({hour => 0, m
 
 Same as truncate_me() but changes current object instead of cloning. This is extremely faster.
 
-=head4 '<=>', 'cmp', compare($date | $sql_string | $epoch | \@array | \%hash)
+=head4 '<=>', 'cmp', compare($date | $iso_string | $epoch | \@array | \%hash)
 
 Compares 2 dates and returns -1, 0 or 1. If second operand is not an object then it's created.
 If second operand is object but not Panda::Date then it croaks.
@@ -582,7 +587,7 @@ Adds a relative date to date object.  If second operand is not an object then it
 
 Same as add() but changes current object instead of creating new one.
 
-=head4 '-', subtract($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash | $date | $sql_string)
+=head4 '-', subtract($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash | $date | $iso_string)
 
 Subtracts a relative date or another date from the date object. In case of relative date the result is a L<Panda::Date> object.
 Otherwise the result is L<Panda::Date::Int>.
@@ -669,7 +674,7 @@ Class::Date's clone() receives list of key-value pairs and supports key aliases 
 Panda::Date always performs all calculations with DST_ADJUST enabled.
 In Class::Date it is the default but you can disable DST_ADJUST (but i don't know why someone would do that).
 
-=item Panda::Date::Rel constructors don't support SQL date format ("YYYY-MM-DD HH:MM:SS")
+=item Panda::Date::Rel constructors don't support ISO/SQL date format ("YYYY-MM-DD HH:MM:SS")
 
 Because it's a DATE format NOT RELATIVE.
 

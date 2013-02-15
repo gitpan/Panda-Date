@@ -4,7 +4,7 @@
 #include "Date.h"
 #include "error.h"
 
-uint8_t parse_sql      (const char*, size_t, struct tm &);
+uint8_t parse_iso      (const char*, size_t, struct tm &);
 uint8_t parse_relative (const char*, size_t, struct tm &);
 
 #endif

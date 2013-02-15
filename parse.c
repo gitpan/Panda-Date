@@ -7,7 +7,7 @@
 #define STATE_MIN   4
 #define STATE_SEC   5
 
-uint8_t parse_sql (const char* str, size_t len, struct tm &date) {
+uint8_t parse_iso (const char* str, size_t len, struct tm &date) {
     int state = STATE_YEAR;
     int32_t curval = 0;
     for (int i = 0; i <= len; i++) {
