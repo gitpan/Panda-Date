@@ -1,7 +1,7 @@
 use 5.012;
 use warnings;
 use POSIX qw(setlocale LC_ALL); setlocale(LC_ALL, 'en_US.UTF-8'); $ENV{TZ} = 'Europe/Moscow'; POSIX::tzset();
-use Panda::Date qw/now date rdate idate today :const/;
+use Panda::Date qw/now date rdate idate today today_epoch :const/;
 use Test::More;
 
 plan skip_all => 'set WITH_LEAKS=1 to enable leaks test' unless $ENV{WITH_LEAKS};
@@ -402,6 +402,8 @@ for (my $i = 0; $i < 10000; $i++) {
     $ret = $date > date(0) && $date < date(2000000000);
     $ret = date(1330688851) < $date && date(1330688853) > $date && date(1330688852) == $date && date(1330688852) eq $date;
     eval {my $a = $date == idate(0,0); 1};
+
+    $ret = today_epoch();
     
     $measure = BSD::Resource::getrusage()->{"maxrss"} if $i == 1000;
 }

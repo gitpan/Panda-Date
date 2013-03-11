@@ -24,6 +24,17 @@ OUTPUT:
     RETVAL
 
 
+uint64_t
+today_epoch (...)
+CODE:
+    PDate date((time_t) 0);
+    date.epoch(time(NULL));
+    date.truncateME();
+    RETVAL = date.epoch();
+OUTPUT:
+    RETVAL
+
+
 PDate *
 date (SV* arg)
 CODE:

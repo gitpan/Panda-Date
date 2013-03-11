@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use POSIX qw(setlocale LC_ALL); setlocale(LC_ALL, 'en_US.UTF-8'); $ENV{TZ} = 'Europe/Moscow'; POSIX::tzset();
-use Panda::Date qw/now date today/;
+use Panda::Date qw/now date today today_epoch/;
 
 my $date;
 
@@ -31,15 +31,15 @@ my @ret = $date->array;
 ok($ret[0] == 2013 and $ret[1] == 9 and $ret[2] == 5 and $ret[3] == 3 and $ret[4] == 4 and $ret[5] == 5);
 cmp_deeply($date->aref, [2013,9,5,3,4,5]);
 
-@ret = $date->struct;
-ok($ret[0] == 5 && $ret[1] == 4 && $ret[2] == 3 && $ret[3] == 5 && $ret[4] == 8 && $ret[5] == 113 &&
-   $ret[6] == 4 && $ret[7] == 247 && $ret[8] == 0);
-cmp_deeply($date->sref, [5,4,3,5,8,113,4,247,0]);
+$date = Panda::Date->new("2012-09-05 3:4:5");
+cmp_deeply([$date->struct], [5,4,3,5,8,112,3,248,0]);
+cmp_deeply($date->sref, [5,4,3,5,8,112,3,248,0]);
 
 my %ret = $date->hash;
-cmp_deeply(\%ret, {year => 2013, month => 9, day => 5, hour => 3, min => 4, sec => 5});
+cmp_deeply(\%ret, {year => 2012, month => 9, day => 5, hour => 3, min => 4, sec => 5});
 cmp_deeply($date->href, \%ret);
 
+$date = Panda::Date->new("2013-09-05 3:4:5");
 ok($date->month_begin eq "2013-09-01 03:04:05");
 ok($date->month_end eq "2013-09-30 03:04:05");
 ok($date->days_in_month == 30);
@@ -69,6 +69,8 @@ ok(abs($now->epoch - time) <= 1);
 # today
 $date = today();
 ok($date->year == $now->year and $date->month == $now->month and $date->day == $now->day and $date->hour == 0 and $date->min == 0 and $date->sec == 0);
+# today_epoch
+ok(abs(today_epoch() - today()->epoch) <= 1);
 
 # date
 $date = date(0);

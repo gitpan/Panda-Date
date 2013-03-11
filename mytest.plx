@@ -11,6 +11,19 @@ use Data::Dumper qw/Dumper/;
 use Storable qw/freeze nfreeze thaw dclone/;
 use JSON::XS;
 say "START";
+use Class::Date;
+
+Panda::Date->dst_adjust(1);
+
+foreach my $class (qw/Panda::Date Class::Date/) {
+
+    my $date = $class->new("2005-03-27 01:00:01");
+    my $till = $class->new("2006-01-01");
+
+    say $date;
+    say ($date+3600);
+}
+#exit;
 
 my $cdate = new Class::Date("2013-06-05 23:45:56");
 my $date  = new Panda::Date("2013-06-05 23:45:56");

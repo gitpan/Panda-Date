@@ -4,7 +4,7 @@ use 5.012;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '1.5';
+our $VERSION = '1.6';
 
 =head1 NAME
 
@@ -295,6 +295,14 @@ Same as
     Panda::Date->new(time())->truncate
     
 but runs much faster. Can be called as function, class method or object method.
+
+=head4 today_epoch()
+
+Same as
+
+    today()->epoch
+
+but runs faster. Can be called as function, class method or object method.
 
 =head4 string_format([$format])
 
@@ -671,8 +679,18 @@ Class::Date's clone() receives list of key-value pairs and supports key aliases 
 
 =item there is no DST_ADJUST setting.
 
-Panda::Date always performs all calculations with DST_ADJUST enabled.
-In Class::Date it is the default but you can disable DST_ADJUST (but i don't know why someone would do that).
+Panda::Date always performs all calculations with DST_ADJUST disabled for now. That means that
+(in MSK timezone there was DST change 27 mar 1:59:59 -> 3:00:00)
+
+2005-03-27 01:00:01 + 1h = 2005-03-27 02:00:01 (not 2005-03-27 03:00:01).
+
+I believe that it doesn't matter in most cases. To fix that i would need to call mktime() after every calculation,
+but it's very slow (about 150_000/s on my machine) so i don't want to slow don't this module by 30x.
+
+I'm working on a effective solution of this problem (using timezone info without mktime() to calc DST borders)
+
+Anyway, in Class::Date, 2005-03-27 01:00:01 + 1h = 2005-03-27 01:00:01. You'll hang in infinite loop
+if you write "while ($date < $till) { $date += '1h'; }"
 
 =item Panda::Date::Rel constructors don't support ISO/SQL date format ("YYYY-MM-DD HH:MM:SS")
 
