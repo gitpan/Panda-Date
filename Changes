@@ -1,3 +1,17 @@
+2.0      31.01.2014
+           - Panda::Date is now built on top of libpanda-time - complete set of POSIX time functions written from scratch.
+             It now works correctly with all ranges of dates in all timezones and perfomance has been greatly increased.
+           - Panda::Date objects are now capable of working in different timezones with no perfomance penalty.
+           - Panda::Date is no longer following POSIX::tzset() timezone. It has it's own tzset() function in Panda::Time.
+           - Panda::Date comes with its own timezone DB (not used by default).
+           - set_from in all classes has been renamed to 'set'
+           - now(), today(), today_epoch(), string_format(), range_check() are now functions only (not a class/object methods).
+           - methods 'add', 'subtract', etc renamed to 'add_new', 'subtract_new', etc
+           - methods 'add_me', 'subtract_me', etc renamed to 'add', 'subtract', etc
+           - month_border_adjust is no longer supported
+           - added includes() method to P::D::Int class.
+           - Better Storable hooks implementation (less space, saving timezone info).
+           - '_year' and '_month' keys in hashes to constructor or clone functions are no longer supported.
 1.6      11.03.2013
            - fix docs
 

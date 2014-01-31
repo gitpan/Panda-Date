@@ -1,41 +1,18 @@
 use 5.012;
-use inc::Module::Install;
-use ExtUtils::Manifest;
+require 'libpanda/build.pl';
 
-name     'Panda-Date';
-all_from 'lib/Panda/Date.pm';
+my %supported_os = map {$_ => 1} qw# freebsd linux darwin #;
+die "Unsupported OS: $^O (supported: ".join(', ', keys %supported_os).')' unless $supported_os{$^O};
 
-requires 'Panda::Export';
-test_requires 'Test::Deep';
-
-#FIX FOR SYMLINK 'abstract'
-ExtUtils::Manifest::mkmanifest();
-ExtUtils::Manifest::maniadd({
-    'abstract/perlobject.map' => '',
-    'abstract/include/lib.h' => '',
-});
-
-makemaker_args(
-    CC       => 'g++',
-    LD       => '$(CC)',
-    XSOPT    => '-C++',
-    OBJECT   => '$(O_FILES)',
-    TYPEMAPS => ['abstract/perlobject.map'],
+write_makefile(
+    NAME               => 'Panda::Date',
+    VERSION_FROM       => 'lib/Panda/Time.pm',
+    ABSTRACT_FROM      => 'lib/Panda/Date.pm',
+    PREREQ_PM          => {'Panda::Export' => 0, 'Test::Deep' => 0, 'File::ShareDir' => 0},
+    BUILD_REQUIRES     => {'Test::Simple' => 0.96},
+    CONFIGURE_REQUIRES => {'File::ShareDir::Install' => '0.07'},
+    MYEXTLIB           => ['libpanda/panda/time', 'libpanda/panda/date'],
+    INSTALL_SHARE      => 'share',
+    #DEFINE             => '-DTEST_INLINE'
+    #OPTIMIZE           => '-g',
 );
-
-{
-    package MY;
-    use 5.012;
-
-    sub postamble {
-        return <<'EOF';
-$(OBJECT) : abstract/include/*.h *.h
-
-$(XS_FILES) : *.xsi
-
-EOF
-    }
-}
-
-auto_install;
-WriteAll;

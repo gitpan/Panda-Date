@@ -2,25 +2,25 @@ MODULE = Panda::Date                PACKAGE = Panda::Date
 PROTOTYPES: DISABLE
 #///////////////////////////// STATIC FUNCTIONS ///////////////////////////////////
 
-PDateRel *
-rdate (...)
+DateRel *
+rdate (SV* from = NULL, SV* till = NULL)
 CODE:
-    RETVAL = items > 1 ?
-                new PDateRel(ST(0), ST(1)) : 
-                (items > 0 ? new PDateRel(ST(0)) : new PDateRel());
-    const char* CLASS = PDATE_REL_CLASS;
+    const char* CLASS = DATEREL_CLASS;
+    if      (till) RETVAL = daterel_new(from, till);
+    else if (from) RETVAL = daterel_new(from);
+    else           RETVAL = new DateRel();
 OUTPUT:
     RETVAL
     
 
-PDateRel *
-rdate_const (...)
+DateRel *
+rdate_const (SV* from = NULL, SV* till = NULL)
 CODE:
-    RETVAL = items > 1 ?
-                new PDateRel(ST(0), ST(1)) : 
-                (items > 0 ? new PDateRel(ST(0)) : new PDateRel());
-    RETVAL->constOn();
-    const char* CLASS = PDATE_REL_CLASS;
+    const char* CLASS = DATEREL_CLASS;
+    if      (till) RETVAL = daterel_new(from, till);
+    else if (from) RETVAL = daterel_new(from);
+    else           RETVAL = new DateRel();
+    RETVAL->isConst(true);
 OUTPUT:
     RETVAL    
 
@@ -28,97 +28,116 @@ OUTPUT:
 MODULE = Panda::Date                PACKAGE = Panda::Date::Rel
 PROTOTYPES: DISABLE
 
-PDateRel *
-PDateRel::new (...)
+DateRel *
+DateRel::new (SV* from = NULL, SV* till = NULL)
 CODE:
-    RETVAL = items > 2 ?
-                new PDateRel(ST(1), ST(2)) : 
-                (items > 1 ? new PDateRel(ST(1)) : new PDateRel());
+    if      (till) RETVAL = daterel_new(from, till);
+    else if (from) RETVAL = daterel_new(from);
+    else           RETVAL = new DateRel();
 OUTPUT:
     RETVAL
 
 
 void
-PDateRel::set_from (SV* arg1, ...)
+DateRel::set (SV* from, SV* till = NULL)
 PPCODE:
-    if (items > 2) THIS->setFrom(arg1, ST(2));
-    else THIS->setFrom(arg1);
+    daterel_chkro(THIS);
+    if (till != NULL) daterel_set(from, till, THIS);
+    else daterel_set(from, THIS);
 
 
-int64_t
-PDateRel::sec (...)
+ptime_t
+DateRel::sec (SV* newval = NULL)
 ALIAS:
     second  = 1
     secs    = 2
     seconds = 3
 CODE:
-    if (items > 1) THIS->sec(SvIV(ST(1)));
+    if (newval) {
+        daterel_chkro(THIS);
+        THIS->sec(SvIV(newval));
+    }
     RETVAL = THIS->sec();
 OUTPUT:
     RETVAL
 
 
-int64_t
-PDateRel::min (...)
+ptime_t
+DateRel::min (SV* newval = NULL)
 ALIAS:
     mins    = 1
     minute  = 2
     minutes = 3
 CODE:
-    if (items > 1) THIS->min(SvIV(ST(1)));
+    if (newval) {
+        daterel_chkro(THIS);
+        THIS->min(SvIV(newval));
+    }
     RETVAL = THIS->min();
 OUTPUT:
     RETVAL
 
 
-int64_t
-PDateRel::hour (...)
+ptime_t
+DateRel::hour (SV* newval = NULL)
 ALIAS:
     hours = 1
 CODE:
-    if (items > 1) THIS->hour(SvIV(ST(1)));
+    if (newval) {
+        daterel_chkro(THIS);
+        THIS->hour(SvIV(newval));
+    }
     RETVAL = THIS->hour();
 OUTPUT:
     RETVAL
 
 
-int64_t
-PDateRel::day (...)
+ptime_t
+DateRel::day (SV* newval = NULL)
 ALIAS:
     days = 1
 CODE:
-    if (items > 1) THIS->day(SvIV(ST(1)));
+    if (newval) {
+        daterel_chkro(THIS);
+        THIS->day(SvIV(newval));
+    }
     RETVAL = THIS->day();
 OUTPUT:
     RETVAL
 
 
-int64_t
-PDateRel::month (...)
+ptime_t
+DateRel::month (SV* newval = NULL)
 ALIAS:
     mon    = 1
     months = 2
     mons   = 3
 CODE:
-    if (items > 1) THIS->month(SvIV(ST(1)));
+    if (newval) {
+        daterel_chkro(THIS);
+        THIS->month(SvIV(newval));
+    }
     RETVAL = THIS->month();
 OUTPUT:
     RETVAL
 
 
-int64_t
-PDateRel::year (...)
+ptime_t
+DateRel::year (SV* newval = NULL)
 ALIAS:
     years = 1
 CODE:
-    if (items > 1) THIS->year(SvIV(ST(1)));
+    if (newval) {
+        daterel_chkro(THIS);
+        THIS->year(SvIV(newval));
+    }
     RETVAL = THIS->year();
 OUTPUT:
     RETVAL
 
 
-int64_t
-PDateRel::to_sec ()
+ptime_t
+DateRel::to_sec ()
 ALIAS:
     to_second  = 1
     to_secs    = 2
@@ -131,7 +150,7 @@ OUTPUT:
 
 
 double
-PDateRel::to_min ()
+DateRel::to_min ()
 ALIAS:
     to_minute  = 1
     to_mins    = 2
@@ -143,7 +162,7 @@ OUTPUT:
 
 
 double
-PDateRel::to_hour ()
+DateRel::to_hour ()
 ALIAS:
     to_hours = 1
 CODE:
@@ -153,7 +172,7 @@ OUTPUT:
 
 
 double
-PDateRel::to_day ()
+DateRel::to_day ()
 ALIAS:
     to_days = 1
 CODE:
@@ -163,7 +182,7 @@ OUTPUT:
 
 
 double
-PDateRel::to_month ()
+DateRel::to_month ()
 ALIAS:
     to_mon    = 1
     to_months = 2
@@ -175,7 +194,7 @@ OUTPUT:
 
 
 double
-PDateRel::to_year ()
+DateRel::to_year ()
 ALIAS:
     to_years = 1
 CODE:
@@ -185,210 +204,213 @@ OUTPUT:
 
 
 const char*
-PDateRel::to_string (...)
+DateRel::to_string (...)
 ALIAS:
     as_string = 1
     string = 2
 CODE:
     RETVAL = THIS->toString();
-    if (RETVAL == NULL) XSRETURN_UNDEF;
 OUTPUT:
     RETVAL
     
 
 bool
-PDateRel::to_bool (...)
+DateRel::to_bool (...)
 CODE:
     RETVAL = !THIS->empty();
 OUTPUT:
     RETVAL
 
 
-int64_t
-PDateRel::to_number (...)
+ptime_t
+DateRel::to_number (...)
 CODE:
     RETVAL = THIS->toSec();
 OUTPUT:
     RETVAL
 
 
-PDateRel*
-PDateRel::multiply (SV* arg, ...)
+DateRel*
+DateRel::multiply_new (SV* arg, ...)
 CODE:
+    const char* CLASS = DATEREL_CLASS;
     if (!looks_like_number(arg)) croak("Panda::Date: cannot '*' on non-number");
-    RETVAL = THIS->multiply(SvNV(arg));
-    const char* CLASS = PDATE_REL_BLESS;
+    RETVAL = THIS->multiplyNew(SvNV(arg));
 OUTPUT:
     RETVAL
     
     
 
 SV*
-PDateRel::multiply_me (SV* arg, ...)
+DateRel::multiply (SV* arg, ...)
 PPCODE:
     if (!looks_like_number(arg)) croak("Panda::Date: cannot '*' on non-number");
-    THIS->multiplyME(SvNV(arg));
+    daterel_chkro(THIS);
+    THIS->multiply(SvNV(arg));
     XSRETURN(1);
 
 
-PDateRel*
-PDateRel::divide (SV* arg, bool reverse)
+DateRel*
+DateRel::divide_new (SV* arg, bool reverse = false)
 CODE:
+    const char* CLASS = DATEREL_CLASS;
     if (!looks_like_number(arg)) croak("Panda::Date: cannot '/' on non-number");
     if (reverse) croak("Panda::Date: illegal divison $num/$reldate");
-    RETVAL = THIS->divide(SvNV(arg));
-    const char* CLASS = PDATE_REL_BLESS;
+    RETVAL = THIS->divideNew(SvNV(arg));
 OUTPUT:
     RETVAL
 
 
 SV*
-PDateRel::divide_me (SV* arg, bool reverse)
+DateRel::divide (SV* arg, bool reverse = false)
 PPCODE:
     if (!looks_like_number(arg)) croak("Panda::Date: cannot '/' on non-number");
     if (reverse) croak("Panda::Date: illegal divison $num/$reldate");
-    THIS->divideME(SvNV(arg));
+    daterel_chkro(THIS);
+    THIS->divide(SvNV(arg));
     XSRETURN(1);
 
 
-PDateRel*
-PDateRel::add (SV* arg, ...)
+DateRel*
+DateRel::add_new (SV* arg, ...)
 CODE:
-    char* CLASS;
-    static PDateRel acc;
-    PDateRel* operand = NULL;
+    const char* CLASS;
+    DateRel* operand = NULL;
     
     if (sv_isobject(arg)) {
-        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
-        else if (sv_isa(arg, PDATE_CLASS)) {
-            PDate* date = (PDate *) SvIV(SvRV(arg));
-            RETVAL = (PDateRel*) date->add(THIS);
-            CLASS = (char*) PDATE_CLASS;
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
+        else if (sv_isa(arg, DATE_CLASS)) {
+            CLASS = DATE_CLASS;
+            Date* date = (Date *) SvIV(SvRV(arg));
+            RETVAL = (DateRel*) date->addNew(THIS);
         }
-        else if (sv_isa(arg, PDATE_INT_CLASS)) {
-            PDateInt* idate = (PDateInt *) SvIV(SvRV(arg));
-            RETVAL = (PDateRel*) idate->add(THIS);
-            CLASS = (char*) PDATE_INT_CLASS;
+        else if (sv_isa(arg, DATEINT_CLASS)) {
+            CLASS = DATEINT_CLASS;
+            DateInt* idate = (DateInt *) SvIV(SvRV(arg));
+            RETVAL = (DateRel*) idate->addNew(THIS);
         }
         else croak("Panda::Date: cannot '+' - unknown object type");
     }
     else {
-        acc.setFrom(arg);
+        static DateRel acc;
+        daterel_set(arg, &acc);
         operand = &acc;
     }
     
     if (operand != NULL) {
-        RETVAL = THIS->add(operand);
-        CLASS = (char*) PDATE_REL_BLESS;
+        CLASS = DATEREL_CLASS;
+        RETVAL = THIS->addNew(operand);
     }
 OUTPUT:
     RETVAL
 
 
 SV*
-PDateRel::add_me (SV* arg, ...)
+DateRel::add (SV* arg, ...)
 PPCODE:
-    static PDateRel acc;
-    PDateRel* operand;
+    daterel_chkro(THIS);
+    DateRel* operand;
     if (sv_isobject(arg)) {
-        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
         else croak("Panda::Date: cannot '+=' - object isn't a Panda::Date::Rel object");
     }
     else {
-        acc.setFrom(arg);
+        static DateRel acc;
+        daterel_set(arg, &acc);
         operand = &acc;
     }
 
-    THIS->addME(operand);
+    THIS->add(operand);
     XSRETURN(1);
 
 
-PDateRel*
-PDateRel::subtract (SV* arg, bool reverse)
+DateRel*
+DateRel::subtract_new (SV* arg, bool reverse = false)
 CODE:
-    static PDateRel acc;
-    PDateRel* operand;
+    const char* CLASS = DATEREL_CLASS;
+    DateRel* operand;
     if (sv_isobject(arg)) {
-        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
         else croak("Panda::Date: cannot '-' - object isn't a Panda::Date::Rel object");
     }
     else {
-        acc.setFrom(arg);
+        static DateRel acc;
+        daterel_set(arg, &acc);
         operand = &acc;
     }
     
-    const char* CLASS = PDATE_REL_BLESS;
-    RETVAL = reverse ? operand->subtract(THIS) : THIS->subtract(operand);
+    RETVAL = reverse ? operand->subtractNew(THIS) : THIS->subtractNew(operand);
 OUTPUT:
     RETVAL
 
 
 SV*
-PDateRel::subtract_me (SV* arg, bool reverse)
+DateRel::subtract (SV* arg, ...)
 PPCODE:
-    // can't be reversed actually
-    static PDateRel acc;
-    PDateRel* operand;
+    daterel_chkro(THIS);
+    DateRel* operand;
     if (sv_isobject(arg)) {
-        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
         else croak("Panda::Date: cannot '-=' - object isn't a Panda::Date::Rel object");
     }
     else {
-        acc.setFrom(arg);
+        static DateRel acc;
+        daterel_set(arg, &acc);
         operand = &acc;
     }
     
-    THIS->subtractME(operand);
+    THIS->subtract(operand);
     XSRETURN(1);
 
 
-PDateRel*
-PDateRel::negative (...)
+DateRel*
+DateRel::negative_new (...)
 CODE:
-    const char* CLASS = PDATE_REL_BLESS;
-    RETVAL = THIS->negative();
+    const char* CLASS = DATEREL_CLASS;
+    RETVAL = THIS->negativeNew();
 OUTPUT:
     RETVAL
 
 
-PDateRel*
-PDateRel::negative_me ()
+SV*
+DateRel::negative ()
 PPCODE:
-    THIS->negativeME();
+    daterel_chkro(THIS);
+    THIS->negative();
     XSRETURN(1);
 
 
 int
-PDateRel::compare (SV* arg, bool reverse)
+DateRel::compare (SV* arg, bool reverse)
 CODE:
-    static PDateRel acc;
-    PDateRel* operand;
+    DateRel* operand;
     if (sv_isobject(arg)) {
-        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
         else croak("Panda::Date: cannot '<=>' - object isn't a Panda::Date::Rel object");
     }
     else {
-        acc.setFrom(arg);
+        static DateRel acc;
+        daterel_set(arg, &acc);
         operand = &acc;
     }
     
     RETVAL = THIS->compare(operand);
-    if (reverse) RETVAL *= -1;
+    if (reverse) RETVAL = -RETVAL;
 OUTPUT:
     RETVAL
 
 
 bool
-PDateRel::equals (SV* arg, ...)
+DateRel::equals (SV* arg, ...)
 CODE:
-    static PDateRel acc;
-    PDateRel* operand;
+    DateRel* operand;
     if (sv_isobject(arg)) {
-        if (sv_isa(arg, PDATE_REL_CLASS)) operand = (PDateRel *) SvIV(SvRV(arg));
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
         else croak("Panda::Date: cannot 'eq' - object isn't a Panda::Date::Rel object");
     }
     else {
-        acc.setFrom(arg);
+        static DateRel acc;
+        daterel_set(arg, &acc);
         operand = &acc;
     }
     RETVAL = THIS->equals(operand);
@@ -396,29 +418,17 @@ OUTPUT:
     RETVAL
 
 
-const char*
-PDateRel::STORABLE_freeze (bool cloning)
+bool
+DateRel::is_const (SV* newval = NULL)
 CODE:
-    RETVAL = THIS->toString();
-OUTPUT:
-    RETVAL
-
-
-PDateRel*
-STORABLE_attach (const char* CLASS, bool cloning, SV* serialized)
-CODE:
-    STRLEN len;
-    const char* str = SvPV(serialized, len);
-    RETVAL = new PDateRel(str, len);
+    if (newval) {
+        daterel_chkro(THIS);
+        THIS->isConst(SvTRUE(newval));
+    }
+    RETVAL = THIS->isConst();
 OUTPUT:
     RETVAL
 
 
 void
-PDateRel::const_on ()
-PPCODE:
-    THIS->constOn();
-
-
-void
-PDateRel::DESTROY ()
+DateRel::DESTROY ()

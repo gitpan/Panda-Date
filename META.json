@@ -1,0 +1,43 @@
+{
+   "abstract" : "fast Date framework in C.",
+   "author" : [
+      "unknown"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "ExtUtils::MakeMaker version 6.86, CPAN::Meta::Converter version 2.133380",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Panda-Date",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Test::Simple" : "0.96"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "File::ShareDir::Install" : "0.07"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "File::ShareDir" : "0",
+            "Panda::Export" : "0",
+            "Test::Deep" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "2.0"
+}

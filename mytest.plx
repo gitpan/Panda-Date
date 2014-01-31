@@ -3,9 +3,9 @@ use 5.012;
 use lib 'blib/lib', 'blib/arch';
 use Benchmark qw/timethis timethese/;
 use Scalar::Util qw/blessed/;
-use POSIX;
-#$ENV{TZ} = 'Europe/Kiev'; POSIX::tzset();
+use POSIX();
 use Panda::Date qw/now today date rdate :const idate/;
+use Panda::Time qw/tzget tzset/;
 use Class::Date;
 use Data::Dumper qw/Dumper/;
 use Storable qw/freeze nfreeze thaw dclone/;
@@ -13,69 +13,162 @@ use JSON::XS;
 say "START";
 use Class::Date;
 
-Panda::Date->dst_adjust(1);
+tzset();
+POSIX::tzset();
 
-foreach my $class (qw/Panda::Date Class::Date/) {
+*my_gmtime = *Panda::Time::gmtime;
+*my_timegm = *Panda::Time::timegm;
+*my_timegmn = *Panda::Time::timegmn;
+*my_localtime = *Panda::Time::localtime;
+*my_timelocal = *Panda::Time::timelocal;
+*my_timelocaln = *Panda::Time::timelocaln;
+*systimegm = *Panda::Time::systimegm;
+*systimelocal = *Panda::Time::systimelocal;
 
-    my $date = $class->new("2005-03-27 01:00:01");
-    my $till = $class->new("2006-01-01");
+*gmtime_bench = *Panda::Time::gmtime_bench;
+*timegm_bench = *Panda::Time::timegm_bench;
+*timegml_bench = *Panda::Time::timegml_bench;
+*localtime_bench = *Panda::Time::localtime_bench;
+*timelocal_bench = *Panda::Time::timelocal_bench;
+*timelocall_bench = *Panda::Time::timelocall_bench;
+*posix_gmtime_bench = *Panda::Time::posix_gmtime_bench;
+*posix_localtime_bench = *Panda::Time::posix_localtime_bench;
+*posix_timegm_bench = *Panda::Time::posix_timegm_bench;
+*posix_timelocal_bench = *Panda::Time::posix_timelocal_bench;
 
-    say $date;
-    say ($date+3600);
+my $tz = $ENV{TZ};
+my $zone = tzget($tz);
+say Dumper($zone);
+
+my %dates = (
+    vneg => [-100000000000, [20, 13, 14, 15, 1, -1199]],
+    neg  => [-100000000, [20, 13, 14, 31, 9, 1966]],
+    pos  => [1300000000, [40, 6, 7, 13, 2, 2011]],
+    fut  => [10000000000, [40, 46, 17, 20, 10, 2286]],
+);
+
+my %funcs = (
+    mygt  => [0, \&gmtime_bench],
+    osgt  => [0, \&posix_gmtime_bench],
+    mytg  => [1, \&timegm_bench],
+    mytgl => [1, \&timegml_bench],
+    ostg  => [1, \&posix_timegm_bench],
+    
+    mylt  => [0, \&localtime_bench],
+    oslt  => [0, \&posix_localtime_bench],
+    mytl  => [1, \&timelocal_bench],
+    mytll => [1, \&timelocall_bench],
+    ostl  => [1, \&posix_timelocal_bench],
+);
+
+my %to_test;
+
+while (my ($fname, $fdata) = each %funcs) {
+    while (my ($dname, $ddata) = each %dates) {
+        my $val = $ddata->[$fdata->[0]];
+        my $func = $fdata->[1];
+        if (ref($val) eq 'ARRAY') {
+            my @arr = @$val;
+            $to_test{"${fname}_$dname"} = sub { $func->(@arr) };
+        } else {
+            $to_test{"${fname}_$dname"} = sub { $func->($val) };
+            say join(', ', $dname, my_gmtime($val));
+        }
+    }
 }
+
+my ($isdst,$Y,$M,$D,$h,$m,$s) = (1,2010,0,1,0,0,0);
+timethese(-1, \%to_test);
+
+exit;
+
+if (my $datestr = shift @ARGV) {
+    test_one_tl($datestr);
+    exit;
+}
+
+my ($a, $b, $c, $d, $e, $f) = ([], [], [], [], [], []);
+exit;
+
+#
+#timethese(-1, {
+#    lt1a   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 11, 1874) },
+#    lt1b   => sub { $a = Panda::Date::timelocall_bench(59, 59, 23, 31, 11, 1950) },
+#    lt1c   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 11, 2050) },
+#    lt1d   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 05, 2050) },
+#    lt1e   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 01, 2050) },
+#    lt2a   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 11, 1874) },
+#    lt2b   => sub { $a = Panda::Date::timelocal_bench(59, 59, 23, 31, 11, 1950) },
+#    lt2c   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 11, 2050) },
+#    lt2d   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 05, 2050) },
+#    lt2e   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 01, 2050) },
+#});
+#
+#$ENV{TZ} = 'America/New_York';
+#tzset();
+#POSIX::tzset();
+#
+#timethese(-1, {
+#    lt1a   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 11, 1874) },
+#    lt1b   => sub { $a = Panda::Date::timelocall_bench(59, 59, 23, 31, 11, 1950) },
+#    lt1c   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 11, 2050) },
+#    lt1d   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 05, 2050) },
+#    lt1e   => sub { $a = Panda::Date::timelocall_bench(20, 10, 21, 07, 01, 2050) },
+#    lt2a   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 11, 1874) },
+#    lt2b   => sub { $a = Panda::Date::timelocal_bench(59, 59, 23, 31, 11, 1950) },
+#    lt2c   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 11, 2050) },
+#    lt2d   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 05, 2050) },
+#    lt2e   => sub { $a = Panda::Date::timelocal_bench(20, 10, 21, 07, 01, 2050) },
+#});
+#
 #exit;
 
-my $cdate = new Class::Date("2013-06-05 23:45:56");
-my $date  = new Panda::Date("2013-06-05 23:45:56");
-my $crel = Class::Date::Rel->new("1M");
-my $rel  = rdate("1M");
-my $idate = idate("2013-06-05 23:45:56", "2014-07-06 23:45:56");
-1;
-
-my @buff;
-
 timethese(-1, {
-    cdate_new_str   => sub { push @buff, new Class::Date("2013-01-25 21:26:43"); }, # push @buff to avoid calling DESTROY
-    panda_new_str   => sub { push @buff, new Panda::Date("2013-01-25 21:26:43"); },
-    cdate_new_epoch => sub { push @buff, new Class::Date(1000000000); },
-    panda_new_epoch => sub { push @buff, new Panda::Date(1000000000); },
-    panda_new_reuse => sub { state $date = new Panda::Date(0); $date->set_from(1000000000); },
-    
-    cdate_now => sub { Class::Date->now; },
-    panda_now => sub { now(); },
-    
-    cdate_truncate    => sub { $cdate->truncate },
-    panda_truncate_me => sub { $date->truncate_me },
-    panda_truncate    => sub { $date->truncate },
-
-    cdate_today  => sub { Class::Date->now->truncate; },
-    panda_today1 => sub { now()->truncate_me; },
-    panda_today2 => sub { today(); },
-
-    cdate_stringify => sub { $cdate->string },
-    panda_stringify => sub { $date->to_string },
-
-    cdate_strftime => sub { $cdate->strftime("%H:%M:%S") },
-    panda_strftime => sub { $date->strftime("%H:%M:%S") },
-
-    cdate_clone_simple => sub { $cdate->clone },
-    panda_clone_simple => sub { $date->clone },
-    cdate_clone_change => sub { $cdate->clone(year => 2008, month => 12) },
-    panda_clone_change => sub { $date->clone({year => 2008, month => 12}) },
-
-    cdate_rel_new_sec => sub { new Class::Date::Rel 1000 },
-    panda_rel_new_sec => sub { new Panda::Date::Rel 1000 },
-    cdate_rel_new_str => sub { new Class::Date::Rel "1Y 2M 3D 4h 5m 6s" },
-    panda_rel_new_str => sub { new Panda::Date::Rel "1Y 2M 3D 4h 5m 6s" },
-    
-    cdate_add     => sub { $cdate = $cdate + '1M' },
-    panda_add     => sub { $date = $date + '1M' },
-    panda_add_me  => sub { $date += '1M' },
-    panda_add_me2 => sub { $date += MONTH },
-    panda_add_me3 => sub { $date->month($date->month+1) },
-
-    cdate_compare => sub { $cdate == $cdate },
-    panda_compare => sub { $date == $date },
+#    c_my_gmtime_pos     => sub { gmtime_bench(1000000000000); },
+#    c_my_gmtime_neg     => sub { gmtime_bench(-1000000000); },
+#    c_my_gmtime_vneg    => sub { gmtime_bench(-1000000000000); },
+#    c_posix_gmtime_pos  => sub { posix_gmtime_bench(1000000000000); },
+#    c_posix_gmtime_neg  => sub { posix_gmtime_bench(-1000000000); },
+#    c_posix_gmtime_vneg => sub { posix_gmtime_bench(-1000000000000); },
+#    xs_my_gmtime            => sub { my $a = my_gmtime(10000000000); },
+#    xs_core_gmtime          => sub { my $a = gmtime(10000000000); },
+    c_my_timegm_lite_pos => sub { timegm_lite_bench(20, 15, 18, 28, 2, 2013) },
+    c_my_timegm_lite_neg => sub { timegm_lite_bench(20, 15, 18, 28, 0, -2900) },
+    c_my_timegm_pos      => sub { timegm_bench(20, 15, 18, 28, 2, 2013) },
+    c_my_timegm_neg      => sub { timegm_bench(20, 15, 18, 28, 0, -2900) },
+    c_posix_timegm_pos   => sub { posix_timegm_bench(20, 15, 18, 28, 2, 2013) },
+    c_posix_timegm_neg   => sub { posix_timegm_bench(20, 15, 18, 28, 0, -2900) },
+#    xs_my_timegm_pos            => sub { my $a = my_timegm(20, 15, 18, 28, 2, 2013); },
+#    xs_core_timegm_pos          => sub { my $a = timegm(20, 15, 18, 28, 2, 113); },
+#    xs_my_timegm_neg            => sub { my $a = my_timegm(20, 15, 18, 28, 0, -2900); },
+#    xs_core_timegm_neg          => sub { my $a = timegm(20, 15, 18, 28, 2, 0, -2900); },
+#    c_my_localtime_pos     => sub { localtime_bench(1000000000); },
+#    c_my_localtime_posf    => sub { localtime_bench(520000000000); },
+#    c_my_localtime_neg     => sub { localtime_bench(-1000000000); },
+#    c_my_localtime_vneg    => sub { localtime_bench(-10000000000); },
+#    c_posix_localtime_pos  => sub { posix_localtime_bench(1000000000); },
+#    c_posix_localtime_posf => sub { posix_localtime_bench(520000000000); },
+#    c_posix_localtime_neg  => sub { posix_localtime_bench(-1000000000); },
+#    c_posix_localtime_vneg => sub { posix_localtime_bench(-10000000000); },
+    #c_my_timelocal_pos => sub { timelocal_bench(40, 46, 5, 9, 8, 2001) },
+    #c_my_timelocal_posf => sub { timelocal_bench(40, 46, 13, 16, 10, 5138) },
+    #c_my_timelocal_neg => sub { timelocal_bench(20, 13, 1, 25, 3, 1938) },
+    #c_my_timelocal_vneg => sub { timelocal_bench(40, 43, 8, 10, 1, 1653) },
+    #c_posix_timelocal_pos => sub { posix_timelocal_bench(40, 46, 5, 9, 8, 2001) },
+    #c_posix_timelocal_posf => sub { posix_timelocal_bench(40, 46, 13, 16, 10, 5138) },
+    #c_posix_timelocal_neg => sub { posix_timelocal_bench(20, 13, 1, 25, 3, 1938) },
+    #c_posix_timelocal_vneg => sub { posix_timelocal_bench(40, 43, 8, 10, 1, 1653) },
 });
 
-1;
+sub test_one_tl {
+    my ($str) = shift;
+    die "CANNOT PARSE" unless $str =~ m#^(-?\d+)[/-](-?\d+)[/-](-?\d+) (-?\d+):(-?\d+):(-?\d+)$#;
+    my ($Y, $M, $D, $h, $m, $s) = ($1, $2, $3, $4, $5, $6);
+    say sprintf("%04d-%02d-%02d %02d:%02d:%02d", $Y, $M, $D, $h, $m, $s);
+    $M--;
+    my $b = systimelocal($s, $m, $h, $D, $M, $Y-1900);
+    my $isdst = -1;
+    my $a = my_timelocaln($s, $m, $h, $D, $M, $Y, $isdst);
+    say "MY: $a ".my_localtime($a).sprintf(" (%04d-%02d-%02d %02d:%02d:%02d)", $Y, $M+1, $D, $h, $m, $s);
+    say "OS: $b ".localtime($b);
+}

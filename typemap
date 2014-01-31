@@ -1,4 +1,4 @@
 TYPEMAP
-PDate*         EO_OBJECT
-PDateRel*      EO_OBJECT
-PDateInt*      EO_OBJECT
+Date*         EO_OBJECT
+DateRel*      EO_OBJECT
+DateInt*      EO_OBJECT

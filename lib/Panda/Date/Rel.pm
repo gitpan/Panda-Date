@@ -1,5 +1,6 @@
 package Panda::Date::Rel;
 use 5.012;
+use Panda::Date;
 
 =head1 NAME
 
@@ -10,22 +11,23 @@ Panda::Date::Rel - Relative date object.
 use overload '""'     => \&to_string,
              'bool'   => \&to_bool,
              '0+'     => \&to_number,
-             'neg'    => \&negative,
+             'neg'    => \&negative_new,
              '<=>'    => \&compare, # based on to_sec()
              'eq'     => \&equals,  # based on full equality only
-             '+'      => \&add,
-             '+='     => \&add_me,
-             '-'      => \&subtract,
-             '-='     => \&subtract_me,
-             '*'      => \&multiply,
-             '*='     => \&multiply_me,
-             '/'      => \&divide,
-             '/='     => \&divide_me,
+             '+'      => \&add_new,
+             '+='     => \&add,
+             '-'      => \&subtract_new,
+             '-='     => \&subtract,
+             '*'      => \&multiply_new,
+             '*='     => \&multiply,
+             '/'      => \&divide_new,
+             '/='     => \&divide,
+             '='      => sub { $_[0] },
              fallback => 1;
-
+             
 =head1 DESCRIPTION
 
-Relative date is a length of time not bound to any particular point in time and is used for date calculations.
+Relative date is a period of time not bound to any particular point in time and is used for date calculations.
 Reldate consists of 6 units - seconds, minutes, hours, days, months and years. Some units convert to another inaccurate.
 
 =head1 CLASS METHODS
@@ -66,9 +68,9 @@ $from and $till can be L<Panda::Date> objects or any data supported by L<Panda::
 
 =head1 OBJECT METHODS
 
-=head4 set_from($rel_string | $seconds | \@rel_array | \%rel_hash | $reldate)
+=head4 set($rel_string | $seconds | \@rel_array | \%rel_hash | $reldate)
 
-=head4 set_from($from, $till)
+=head4 set($from, $till)
 
 Set relative date from data (data can be anything that constructor supports). This is much faster than creating new object.
 
@@ -147,7 +149,7 @@ Returns FALSE, if sec = 0 and min = 0 and .... year = 0, i.e. duration = 0. Othe
 
 Returns to_sec().
 
-=head4 '*', multiply($num)
+=head4 '*', multiply_new($num)
 
 Multiplies relative date by $num. $num can be fractional but the result is always integer.
 
@@ -161,11 +163,11 @@ Relative date can only be multiplied by number (scalar).
 
 No normalization are made, i.e. 12h*2 = 24h is not normalized to 1D because that would be inaccurate (on DST border day for example, 1D is 25 or 23h)
 
-=head4 '*=', multiply_me($num)
+=head4 '*=', multiply($num)
 
-Same as multiply(), but changes current object instead of creating new one. It's almost 10x faster :-)
+Same as C<multiply_new()>, but changes current object instead of creating new one.
 
-=head4 '/', divide($num)
+=head4 '/', divide_new($num)
 
 Divides relative date by $num. $num can be fractional but the result is always integer.
 
@@ -185,11 +187,11 @@ Examples
 
 P.S. Keep in mind that ($rel / N) * N is not always equals $rel, as well as ($rel * N) / N
 
-=head4 '/=', divide_me($num)
+=head4 '/=', divide($num)
 
-Same as divide(), but changes current object instead of creating new one.
+Same as C<divide_new()>, but changes current object instead of creating new one.
 
-=head4 '+', add($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
+=head4 '+', add_new($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
 Adds another rel date to current. Another reldate can be Panda::Date::Rel object or any data valid for its constructor.
 
@@ -200,9 +202,9 @@ Examples
     print $rel+'30D'; # 2M 30D
     print $rel+[1,2,3]; # 1Y 4M 3D
     
-=head4 '+=', add_me($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
+=head4 '+=', add($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
-Same as add(), but changes current object instead of creating new one.
+Same as C<add_new()>, but changes current object instead of creating new one.
 
 Examples
 
@@ -211,7 +213,7 @@ Examples
     $rel += {sec => 10, min => 20}; # 2M 16h 20m 10s
     $rel += $rel; # 4M 32h 40m 20s
     
-=head4 '-', subtract($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
+=head4 '-', subtract_new($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
 Subtracts another reldate from current. Another reldate can be Panda::Date::Rel object or any data valid for its constructor.
 
@@ -222,23 +224,23 @@ Examples
     print $rel-'30D'; # 2M -30D
     print $rel-[1,2,3]; # -1Y -3D
     
-=head4 '-=', subtract_me($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
+=head4 '-=', subtract($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
-Same as subtract(), but changes current object instead of creating new one.
+Same as C<subtract_new()>, but changes current object instead of creating new one.
  
-=head4 'neg', negative() (unary '-')
+=head4 'neg', negative_new() (unary '-')
 
 Changes sign of YMDhms
 
-=head4 negative_me()
+=head4 negative()
 
-Same as negative(), but changes current object instead of creating new one.
+Same as C<negative_new()>, but changes current object instead of creating new one.
 
 =head4 '<=>', compare($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
 Compares 2 relative dates and returns -1, 0 or 1. Another reldate can be Panda::Date::Rel object or any data valid for its constructor.
 
-Dates are compared using to_sec(), therefore 2 dates can be equal even if they consist of different components.
+Dates are compared using C<to_sec()>, therefore 2 dates can be equal even if they consist of different components.
 If you want full equality test, use 'eq'.
 
 Examples
@@ -261,6 +263,11 @@ Same as '==' but returns TRUE only if 2 reldates are fully identical.
 =head1 OPERATOR OVERLOAD RULES
 
 See screenshot L<http://crazypanda.ru/v/clip2net/g/0/KfYbuNhu0b.png>
+
+=head1 STORABLE SERIALIZATION
+
+Storable serialization is fully supported. That means you're able to freeze Panda::Date::Rel objects and 
+thaw serialized data back without losing any information.
 
 =head1 AUTHOR
 

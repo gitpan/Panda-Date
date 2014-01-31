@@ -1,10 +1,10 @@
 use 5.012;
 use warnings;
-use POSIX qw(setlocale LC_ALL); setlocale(LC_ALL, 'en_US.UTF-8'); $ENV{TZ} = 'Europe/Moscow'; POSIX::tzset();
-use Panda::Date qw/now date rdate idate today today_epoch :const/;
 use Test::More;
+use lib 't/lib'; use PDTest;
+use Storable qw/freeze thaw nfreeze dclone/;
 
-plan skip_all => 'set WITH_LEAKS=1 to enable leaks test' unless $ENV{WITH_LEAKS};
+plan skip_all => 'set TEST_FULL=1 to enable leaks test' unless $ENV{TEST_FULL};
 
 my $ok = eval {
     require BSD::Resource;
@@ -18,16 +18,21 @@ my $leak = 0;
 
 my @a = 1..100;
 undef @a;
+my $i = 0;
 
-for (my $i = 0; $i < 10000; $i++) {
+while (++$i < 100000) {
+    tzset('Europe/Moscow');
+    tzget('America/New_York');
+    #Panda::Time::dump_zones();
+    
     my ($date, $rel, $idate, $ret, @ret, %ret, $scalar);
-    $date = new Panda::Date(0);
+    $date = new Panda::Date(0, 'Europe/Moscow');
     $ret = $date->string.$date->epoch;
-    $date = new Panda::Date(1000000000);
+    $date = new Panda::Date(1000000000, 'Europe/Kiev');
     $ret = $date->string.$date->epoch;
-    $date = new Panda::Date([2012,02,20,15,16,17]);
+    $date = new Panda::Date([2012,02,20,15,16,17], 'America/New_York');
     $ret = $date->string.$date->epoch;
-    $date = new Panda::Date({year => 2013, month => 06, day => 28, hour => 6, min => 6, sec => 6});
+    $date = new Panda::Date({year => 2013, month => 06, day => 28, hour => 6, min => 6, sec => 6}, 'Australia/Melbourne');
     $ret = $date->string.$date->epoch;
     $date = new Panda::Date("2013-01-26 6:47:29\0");
     $ret = $date->string.$date->epoch;
@@ -41,8 +46,7 @@ for (my $i = 0; $i < 10000; $i++) {
     $ret = $date->day + $date->mday + $date->day_of_month;
     $ret = $date->hour + $date->min + $date->minute + $date->sec + $date->second;
     $ret = $date->to_string;
-    $ret = $date->to_string . $date . $date->string . $date->as_string . 
-    $date->epoch;
+    $ret = $date->to_string . $date . $date->string . $date->as_string . $date->epoch;
     $ret = $date->to_number + int($date);
     $date = new Panda::Date([]);
     $ret = $date->string.$date->epoch;
@@ -57,7 +61,7 @@ for (my $i = 0; $i < 10000; $i++) {
     $date = Panda::Date->new("2013-09-05 3:4:5");
     $ret = $date->hms . $date->ymd . $date->mdy . $date->dmy . $date->ampm . $date->meridiam;
     $date = Panda::Date->new("2013-09-05 23:4:5");
-    $ret = $date->ampm . $date->meridiam . $date->tzoffset;
+    $ret = $date->ampm . $date->meridiam . $date->gmtoff;
     $date = Panda::Date->new("2013-09-05 3:4:5");
     @ret = $date->array;
     $ret = $date->aref;
@@ -65,11 +69,11 @@ for (my $i = 0; $i < 10000; $i++) {
     $ret = $date->sref;
     %ret = $date->hash;
     $ret = $date->href;
+    $ret = $date->month_begin_new;
+    $ret = $date->month_end_new;
+    $ret = $date->days_in_month;
     $ret = $date->month_begin;
     $ret = $date->month_end;
-    $ret = $date->days_in_month;
-    $ret = $date->month_begin_me;
-    $ret = $date->month_end_me;
     $ret = now();
     $ret = $date->string.$date->epoch;
     $ret = today();
@@ -85,15 +89,24 @@ for (my $i = 0; $i < 10000; $i++) {
     $date = date "2013-01-26 6:47:29.345341";
     $ret = $date->string.$date->epoch;
     $date = date "2013-01-26 6:47:29";
-    $ret = $date->truncate;
+    $ret = $date->truncate_new;
     $ret = $ret->string.$ret->epoch;
-    $ret = $date->truncate_me;
+    $ret = $date->truncate;
     $ret = int(date(123456789));
-    $ret = $date->set_from(100);
-    $ret = $date->set_from("2013-01-26 6:47:29.345341");
-    $ret = $date->set_from([1,2,3]);
-    $ret = $date->set_from({year => 1000});
-    
+    $ret = $date->set(100);
+    $ret = $date->set("2013-01-26 6:47:29.345341");
+    $ret = $date->set([1,2,3]);
+    $ret = $date->set({year => 1000});
+    $ret = $date->clone();
+    $ret = $date->clone([-1,1,-1,2,-3,3]);
+    $ret = $date->clone({year => 1, month => 2, day => 3, hour => 4, min => 5, sec => 6});
+    $ret = $date->clone({year => 1, month => 2, day => 3, hour => 4, min => 5, sec => 6}, 'Europe/Kiev');
+    $ret = $date->clone(undef, 'Europe/Moscow');
+    $ret = $date->clone(undef, undef);
+    $date->tz('Australia/Melbourne');
+    $date->to_timezone('Europe/Kiev');
+    $ret = $date->tz;
+    tzset('America/New_York');
     
 
     $date = Panda::Date->new("2013-03-05 2:4:6");
@@ -106,32 +119,16 @@ for (my $i = 0; $i < 10000; $i++) {
     
     $date = Panda::Date->new("2013-03-05 2:4:6");
     $ret = $date->sql;
-    $ret = Panda::Date->string_format;
-    $ret = Panda::Date->string_format("%Y%m%d%H%M%S");
-    $ret = Panda::Date->string_format;
+    $ret = Panda::Date::string_format;
+    $ret = Panda::Date::string_format("%Y%m%d%H%M%S");
+    $ret = Panda::Date::string_format;
     $ret = $date.'';
-    $ret = Panda::Date->string_format("%Y/%m/%d");
+    $ret = Panda::Date::string_format("%Y/%m/%d");
     $ret = $date.'';
-    $ret = Panda::Date->string_format(undef);
+    $ret = Panda::Date::string_format(undef);
     $ret = $date.'';
     
     
-    
-    $ret = Panda::Date->string_format("%Y-%m-%d");
-    $date = Panda::Date->new("2001-01-31");
-    $ret = Panda::Date->month_border_adjust;
-    $ret = $date->month($date->month+1);
-    $ret = $date.'';
-    $ret = $date->yday;
-    $date = Panda::Date->new("2001-01-31");
-    $ret = Panda::Date->month_border_adjust(1);
-    $ret = Panda::Date->month_border_adjust;
-    $ret = $date->month($date->month+1);
-    $ret = $date.'';
-    $ret = $date->yday;
-
-
-
     # OK
     $date = new Panda::Date("2010-01-01");
     my $ok;
@@ -148,20 +145,19 @@ for (my $i = 0; $i < 10000; $i++) {
     $ret = int($date);
     
     
-    $ret = Panda::Date->string_format("%Y-%m-%d");
-    $ret = Panda::Date->range_check;
+    $ret = Panda::Date::string_format("%Y-%m-%d");
+    $ret = Panda::Date::range_check;
     $ret = Panda::Date->new("2001-02-31").'';
-    $ret = Panda::Date->range_check(1);
-    $ret = Panda::Date->range_check;
+    $ret = Panda::Date::range_check(1);
+    $ret = Panda::Date::range_check;
     $date = Panda::Date->new("2001-02-31");
     $ret = 1 if $date;
     $ret = $date->string;
     $ret = $date->error;
     $ret = $date->errstr;
     
-    Panda::Date->month_border_adjust(undef);
-    Panda::Date->string_format(undef);
-    Panda::Date->range_check(undef);
+    Panda::Date::string_format(undef);
+    Panda::Date::range_check(undef);
     
     
     
@@ -222,17 +218,17 @@ for (my $i = 0; $i < 10000; $i++) {
     $ret = rdate("2013-04-03 16:48:33", "2012-03-02 15:47:32")->string;
     $ret = rdate("2012-03-02 15:47:32", "2013-04-03 16:48:33") eq Panda::Date::Rel->new("2012-03-02 15:47:32", "2013-04-03 16:48:33");
     
-    $rel->set_from(1000);
+    $rel->set(1000);
     $ret = $rel->string;
-    $rel->set_from(0);
-    $rel->set_from("1000");
-    $rel->set_from(0);
-    $rel->set_from("1Y 2M 3D 4h 5m 6s");
-    $rel->set_from(0);
-    $rel->set_from([1,2,3,4,5,6]);
-    $rel->set_from(0);
-    $rel->set_from({year => 1, month => 2, day => 3, hour => 4, min => 5, sec => 6});
-    $rel->set_from(0);
+    $rel->set(0);
+    $rel->set("1000");
+    $rel->set(0);
+    $rel->set("1Y 2M 3D 4h 5m 6s");
+    $rel->set(0);
+    $rel->set([1,2,3,4,5,6]);
+    $rel->set(0);
+    $rel->set({year => 1, month => 2, day => 3, hour => 4, min => 5, sec => 6});
+    $rel->set(0);
     
     $ret = SEC eq "1s" && MIN eq "1m" && HOUR eq "1h" && DAY eq '1D' && MONTH eq '1M' && YEAR eq '1Y';
     
@@ -288,7 +284,7 @@ for (my $i = 0; $i < 10000; $i++) {
     eval {$rel /= date(0); 1};
     eval {$rel /= idate(0,0); 1};
     $ret = -rdate("1Y 2M -3D -4h");
-    $ret = rdate("1Y")->negative_me;
+    $ret = rdate("1Y")->negative;
     $rel = rdate("1Y 1M");
     $ret = $rel > "1Y" && $rel < "1Y 1M 1s";
     $ret = "1Y" < $rel && "1Y 1M 1s" > $rel;
@@ -313,7 +309,7 @@ for (my $i = 0; $i < 10000; $i++) {
            $idate->iyear + $idate->iyears + $idate->year + $idate->years;
     $ret = $idate->relative->string;
     $ret = idate("2004-03-09 00:00:00", "2003-09-10")->relative->string;
-    $ret = $idate->set_from("1985-01-02 01:02:03", "1990-02-29 23:23:23");
+    $ret = $idate->set("1985-01-02 01:02:03", "1990-02-29 23:23:23");
 
 
     $idate = idate("2012-02-01", "2013-02-01");
@@ -346,7 +342,7 @@ for (my $i = 0; $i < 10000; $i++) {
     eval { $idate -= idate(123,123); 1; };
     $idate = idate("2012-02-01", "2013-02-01");
     $ret = (-$idate)->duration;
-    $idate->negative_me;
+    $idate->negative;
     $ret = $idate->duration;
     $idate = idate("2012-02-01 00:00:00", "2012-02-01 00:00:01");
     $ret = $idate > ["2013-02-01 00:00:00", "2013-02-01 00:00:00"] && $idate < ["2013-02-01 00:00:00", "2013-02-01 00:00:02"];
@@ -362,8 +358,6 @@ for (my $i = 0; $i < 10000; $i++) {
     $ret = $idate > idate("2013-02-01 00:00:00", "2013-02-01 00:00:00") && $idate < idate("2013-02-01 00:00:00", "2013-02-01 00:00:02");
     $ret = $idate == idate("2013-02-01 00:00:00", "2013-02-01 00:00:01") && $idate ne idate("2013-02-01 00:00:00", "2013-02-01 00:00:01");
     $ret = $idate eq idate("2012-02-01 00:00:00", "2012-02-01 00:00:01");
-    
-    
     
     $date = date("2012-03-02 15:47:32");
     $ret = $date + "1D";
@@ -405,6 +399,14 @@ for (my $i = 0; $i < 10000; $i++) {
 
     $ret = today_epoch();
     
+    foreach my $obj (date(1000000000), date(1000000000, 'Europe/Kiev'), rdate("1Y 1M 1D 2h 3m 4s"), idate(date(1000000000), date(1000000000, 'Europe/Kiev'))) {
+        $ret = freeze($obj);
+        $ret = thaw($ret);
+        $ret = thaw(nfreeze $obj);
+        $ret = dclone($obj);
+    }
+}
+continue {
     $measure = BSD::Resource::getrusage()->{"maxrss"} if $i == 1000;
 }
 

@@ -1,0 +1,723 @@
+MODULE = Panda::Date                PACKAGE = Panda::Date
+PROTOTYPES: DISABLE
+
+#///////////////////////////// STATIC FUNCTIONS ///////////////////////////////////
+
+Date *
+now ()
+CODE:
+    const char* CLASS = DATE_CLASS;
+    RETVAL = Date::now();
+OUTPUT:
+    RETVAL
+
+
+Date *
+today ()
+CODE:
+    const char* CLASS = DATE_CLASS;
+    RETVAL = Date::today();
+OUTPUT:
+    RETVAL
+
+
+ptime_t
+today_epoch ()
+CODE:
+    datetime date;
+    localtime(time(NULL), &date);
+    date.sec = 0;
+    date.min = 0;
+    date.hour = 0;
+    RETVAL = timelocall(&date);
+OUTPUT:
+    RETVAL
+
+
+Date *
+date (SV* date = NULL, SV* zone = NULL)
+CODE:
+    const char* CLASS = DATE_CLASS;
+    if (date) RETVAL = date_new(date, tzget_required(zone));
+    else      RETVAL = new Date();
+OUTPUT:
+    RETVAL
+
+
+const char*
+string_format (SV* newval = NULL)
+CODE:
+    if (newval) {
+        if (SvOK(newval) && SvTRUE(newval)) Date::stringFormat(SvPV_nolen(newval));
+        else Date::stringFormat(NULL);
+    }
+    RETVAL = Date::stringFormat();
+OUTPUT:
+    RETVAL
+    
+
+bool
+range_check (SV* newval = NULL)
+CODE:
+    if (newval) Date::rangeCheck(SvTRUE(newval));
+    RETVAL = Date::rangeCheck();
+OUTPUT:
+    RETVAL
+
+#///////////////////////////// OBJECT METHODS ///////////////////////////////////
+
+Date *
+Date::new (SV* date = NULL, SV* zone = NULL)
+CODE:
+    if (date) RETVAL = date_new(date, tzget_required(zone));
+    else      RETVAL = new Date();
+OUTPUT:
+    RETVAL
+
+
+void
+Date::set (SV* arg, SV* zone = NULL)
+PPCODE:
+    
+    date_set(arg, tzget_optional(zone), THIS);
+    XSRETURN(0);
+
+
+ptime_t
+Date::epoch (SV* newval = NULL)
+CODE:
+    if (newval) THIS->epoch(SvIV(newval));
+    RETVAL = THIS->epoch();
+OUTPUT:
+    RETVAL
+    
+    
+int32_t
+Date::year (SV* newval = NULL)
+CODE:
+    if (newval) THIS->year(SvIV(newval));
+    RETVAL = THIS->year();
+OUTPUT:
+    RETVAL
+    
+
+int32_t
+Date::_year (SV* newval = NULL)
+CODE:
+    if (newval) THIS->_year(SvIV(newval));
+    RETVAL = THIS->_year();
+OUTPUT:
+    RETVAL
+
+
+int8_t
+Date::yr (SV* newval = NULL)
+CODE:
+    if (newval) THIS->yr(SvIV(newval));
+    RETVAL = THIS->yr();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::month (SV* newval = NULL)
+ALIAS:
+    mon = 1
+CODE:
+    if (newval) THIS->month(SvIV(newval));
+    RETVAL = THIS->month();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::_month (SV* newval = NULL)
+ALIAS:
+    _mon = 1
+CODE:
+    if (newval) THIS->_month(SvIV(newval));
+    RETVAL = THIS->_month();
+OUTPUT:
+    RETVAL
+    
+
+uint8_t
+Date::day (SV* newval = NULL)
+ALIAS:
+    mday = 1
+    day_of_month = 2
+CODE:
+    if (newval) THIS->day(SvIV(newval));
+    RETVAL = THIS->day();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::hour (SV* newval = NULL)
+CODE:
+    if (newval) THIS->hour(SvIV(newval));
+    RETVAL = THIS->hour();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::min (SV* newval = NULL)
+ALIAS:
+    minute = 1
+CODE:
+    if (newval) THIS->min(SvIV(newval));
+    RETVAL = THIS->min();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::sec (SV* newval = NULL)
+ALIAS:
+    second = 1
+CODE:
+    if (newval) THIS->sec(SvIV(newval));
+    RETVAL = THIS->sec();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::wday (SV* newval = NULL)
+ALIAS:
+    day_of_week = 1
+CODE:
+    if (newval) THIS->wday(SvUV(newval));
+    RETVAL = THIS->wday();
+OUTPUT:
+    RETVAL
+    
+
+uint8_t
+Date::_wday (SV* newval = NULL)
+CODE:
+    if (newval) THIS->_wday(SvUV(newval));
+    RETVAL = THIS->_wday();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::ewday (SV* newval = NULL)
+CODE:
+    if (newval) THIS->ewday(SvUV(newval));
+    RETVAL = THIS->ewday();
+OUTPUT:
+    RETVAL
+
+
+uint16_t
+Date::yday (SV* newval = NULL)
+ALIAS:
+    day_of_year = 1
+CODE:
+    if (newval) THIS->yday(SvUV(newval));
+    RETVAL = THIS->yday();
+OUTPUT:
+    RETVAL
+
+
+uint16_t
+Date::_yday (SV* newval = NULL)
+CODE:
+    if (newval) THIS->_yday(SvUV(newval));
+    RETVAL = THIS->_yday();
+OUTPUT:
+    RETVAL
+
+
+bool
+Date::isdst ()
+ALIAS:
+    daylight_savings = 1
+CODE:
+    RETVAL = THIS->isdst();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::to_string (...)
+ALIAS:
+    as_string = 1
+    string = 2
+CODE:
+    RETVAL = THIS->toString();
+OUTPUT:
+    RETVAL
+    
+
+bool
+Date::to_bool (...)
+CODE:
+    RETVAL = THIS->error() ? false : true;
+OUTPUT:
+    RETVAL
+
+
+ptime_t
+Date::to_number (...)
+CODE:
+    RETVAL = THIS->error() ? 0 : THIS->epoch();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::strftime (const char* format)
+CODE:
+    RETVAL = THIS->strftime(format, NULL, 0);
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::monthname ()
+ALIAS:
+    monname = 1
+CODE:
+    RETVAL = THIS->strftime("%B", NULL, 0);
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::wdayname ()
+ALIAS:
+    day_of_weekname = 1
+CODE:
+    RETVAL = THIS->strftime("%A", NULL, 0);
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::iso ()
+ALIAS:
+    sql = 1
+CODE:
+    RETVAL = THIS->iso();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::mysql ()
+CODE:
+    RETVAL = THIS->mysql();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::hms ()
+CODE:
+    RETVAL = THIS->hms();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::ymd ()
+CODE:
+    RETVAL = THIS->ymd();
+OUTPUT:
+    RETVAL    
+
+
+const char*
+Date::mdy ()
+CODE:
+    RETVAL = THIS->mdy();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::dmy ()
+CODE:
+    RETVAL = THIS->dmy();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::ampm ()
+CODE:
+    RETVAL = THIS->ampm();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::meridiam ()
+CODE:
+    RETVAL = THIS->meridiam();
+OUTPUT:
+    RETVAL
+
+
+int
+Date::gmtoff ()
+CODE:
+    RETVAL = THIS->gmtoff();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::tzabbr ()
+CODE:
+    RETVAL = THIS->tzabbr();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::tzname ()
+CODE:
+    RETVAL = THIS->timezone()->name;
+OUTPUT:
+    RETVAL
+
+
+bool
+Date::tzlocal ()
+CODE:
+    RETVAL = THIS->timezone()->is_local;
+OUTPUT:
+    RETVAL
+
+
+HVR
+Date::tz (SV* newzone = NULL)
+ALIAS:
+    timezone = 1
+    zone     = 2
+CODE:
+    if (newzone) {
+        THIS->timezone(tzget_required(newzone));
+        XSRETURN_UNDEF;
+    }
+    RETVAL = export_timezone(THIS->timezone());
+OUTPUT:
+    RETVAL
+
+
+void
+Date::to_tz (SV* newzone)
+ALIAS:
+    to_timezone = 1
+    to_zone     = 2
+PPCODE:
+    THIS->toTimezone(tzget_required(newzone));
+
+
+void
+Date::array ()
+PPCODE:
+    EXTEND(SP, 6);
+    mPUSHi(THIS->year());
+    mPUSHu(THIS->month());
+    mPUSHu(THIS->day());
+    mPUSHu(THIS->hour());
+    mPUSHu(THIS->min());
+    mPUSHu(THIS->sec());
+    XSRETURN(6);
+
+
+AVR
+Date::aref ()
+CODE:
+    RETVAL = newAV();
+    av_extend(RETVAL, 5);
+    av_store(RETVAL, 0, newSViv(THIS->year()));
+    av_store(RETVAL, 1, newSVuv(THIS->month()));
+    av_store(RETVAL, 2, newSVuv(THIS->day()));
+    av_store(RETVAL, 3, newSVuv(THIS->hour()));
+    av_store(RETVAL, 4, newSVuv(THIS->min()));
+    av_store(RETVAL, 5, newSVuv(THIS->sec()));
+OUTPUT:
+    RETVAL
+
+
+void
+Date::struct ()
+PPCODE:
+    EXTEND(SP, 9);
+    mPUSHu(THIS->sec());
+    mPUSHu(THIS->min());
+    mPUSHu(THIS->hour());
+    mPUSHu(THIS->day());
+    mPUSHu(THIS->_month());
+    mPUSHi(THIS->_year());
+    mPUSHu(THIS->_wday());
+    mPUSHu(THIS->_yday());
+    mPUSHu(THIS->isdst() ? 1 : 0);
+    XSRETURN(9);
+
+
+AVR
+Date::sref ()
+CODE:
+    RETVAL = newAV();
+    av_extend(RETVAL, 8);
+    av_store(RETVAL, 0, newSVuv(THIS->sec()));
+    av_store(RETVAL, 1, newSVuv(THIS->min()));
+    av_store(RETVAL, 2, newSVuv(THIS->hour()));
+    av_store(RETVAL, 3, newSVuv(THIS->day()));
+    av_store(RETVAL, 4, newSVuv(THIS->_month()));
+    av_store(RETVAL, 5, newSViv(THIS->_year()));
+    av_store(RETVAL, 6, newSVuv(THIS->_wday()));
+    av_store(RETVAL, 7, newSVuv(THIS->_yday()));
+    av_store(RETVAL, 8, newSVuv(THIS->isdst() ? 1 : 0));
+OUTPUT:
+    RETVAL
+
+
+void
+Date::hash ()
+PPCODE:
+    EXTEND(SP, 12);
+    mPUSHp("year", 4);
+    mPUSHi(THIS->year());
+    mPUSHp("month", 5);
+    mPUSHu(THIS->month());
+    mPUSHp("day", 3);
+    mPUSHu(THIS->day());
+    mPUSHp("hour", 4);
+    mPUSHu(THIS->hour());
+    mPUSHp("min", 3);
+    mPUSHu(THIS->min());
+    mPUSHp("sec", 3);
+    mPUSHu(THIS->sec());
+    XSRETURN(12);
+
+
+HVR
+Date::href ()
+CODE:
+    RETVAL = newHV();
+    hv_store(RETVAL, "year",  4, newSViv(THIS->year()), 0);
+    hv_store(RETVAL, "month", 5, newSVuv(THIS->month()), 0);
+    hv_store(RETVAL, "day",   3, newSVuv(THIS->day()), 0);
+    hv_store(RETVAL, "hour",  4, newSVuv(THIS->hour()), 0);
+    hv_store(RETVAL, "min",   3, newSVuv(THIS->min()), 0);
+    hv_store(RETVAL, "sec",   3, newSVuv(THIS->sec()), 0);
+OUTPUT:
+    RETVAL
+
+
+Date*
+Date::clone (SV* diff = NULL, SV* zoneSV = NULL)
+CODE:
+    const char* CLASS = DATE_CLASS;
+    if (diff) {
+        tz* zone = tzget_optional(zoneSV);
+        if (SvROK(diff)) RETVAL = date_clone(diff, zone, THIS);
+        else RETVAL = THIS->clone(zone);
+    }
+    else RETVAL = THIS->clone();
+OUTPUT:
+    RETVAL
+
+
+SV*
+Date::month_begin ()
+PPCODE:
+    THIS->monthBegin();
+    XSRETURN(1);
+
+
+Date*
+Date::month_begin_new ()
+CODE:
+    const char* CLASS = DATE_CLASS;
+    RETVAL = THIS->monthBeginNew();
+OUTPUT:
+    RETVAL
+
+
+SV*
+Date::month_end ()
+PPCODE:
+    THIS->monthEnd();
+    XSRETURN(1);
+
+
+Date*
+Date::month_end_new ()
+CODE:
+    const char* CLASS = DATE_CLASS;
+    RETVAL = THIS->monthEndNew();
+OUTPUT:
+    RETVAL
+
+
+int
+Date::days_in_month ()
+CODE:
+    RETVAL = THIS->daysInMonth();
+OUTPUT:
+    RETVAL
+
+
+uint8_t
+Date::error ()
+CODE:
+    RETVAL = THIS->error();
+OUTPUT:
+    RETVAL
+
+
+const char*
+Date::errstr ()
+CODE:
+    RETVAL = THIS->errstr();
+OUTPUT:
+    RETVAL
+
+
+SV*
+Date::truncate ()
+PPCODE:
+    THIS->truncate();
+    XSRETURN(1);
+    
+
+Date *
+Date::truncate_new ()
+CODE:
+    const char* CLASS = DATE_CLASS;
+    RETVAL = THIS->truncateNew();
+OUTPUT:
+    RETVAL
+
+
+int
+Date::compare (SV* arg, bool reverse = false)
+CODE:
+    Date* operand;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, DATE_CLASS)) operand = (Date *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '<=>' or 'cmp' - object isn't a Panda::Date object");
+    }
+    else {
+        //static Date acc((ptime_t) 0);
+        Date acc((ptime_t) 0);
+        date_set(arg, THIS->timezone(), &acc);
+        operand = &acc;
+    }
+    
+    RETVAL = THIS->compare(operand);
+    if (reverse) RETVAL = -RETVAL;
+OUTPUT:
+    RETVAL    
+
+
+Date*
+Date::add_new (SV* arg, ...)
+CODE:
+    const char* CLASS = DATE_CLASS;
+    DateRel* operand;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '+' - object isn't a Panda::Date::Rel object");
+    }
+    else {
+        static DateRel acc;
+        daterel_set(arg, &acc);
+        operand = &acc;
+    }
+    RETVAL = THIS->addNew(operand);
+OUTPUT:
+    RETVAL
+
+
+SV*
+Date::add (SV* arg, ...)
+PPCODE:
+    DateRel* operand;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '+=' - object isn't a Panda::Date::Rel object");
+    }
+    else {
+        static DateRel acc;
+        daterel_set(arg, &acc);
+        operand = &acc;
+    }
+
+    THIS->add(operand);
+    XSRETURN(1);
+
+
+Date*
+Date::subtract_new (SV* arg, bool reverse)
+CODE:
+    const char* CLASS;
+    //static Date opDate((ptime_t) 0);
+    static DateRel opRel;
+    
+    if (sv_isobject(arg)) { // reverse is impossible here
+        if (sv_isa(arg, DATEREL_CLASS)) {
+            CLASS = DATE_CLASS;
+            RETVAL = THIS->subtractNew((DateRel *) SvIV(SvRV(arg)));
+        }
+        else if (sv_isa(arg, DATE_CLASS)) {
+            CLASS = DATEINT_CLASS;
+            Date* date = (Date *) SvIV(SvRV(arg));
+            RETVAL = (Date*) new DateInt(date, THIS);
+        }
+        else croak("Panda::Date: cannot '-' unsupported object type");
+    }
+    else if (reverse) { // only date supported for reverse
+        CLASS = DATEINT_CLASS;
+        Date opDate((ptime_t) 0);
+        date_set(arg, THIS->timezone(), &opDate);
+        RETVAL = (Date*) new DateInt(THIS, &opDate);
+    }
+    else { // date or rdate scalar
+        const char* argstr = SvPV_nolen(arg);
+        if (looks_like_relative(argstr)) { // not a date -> reldate
+            CLASS = DATE_CLASS;
+            daterel_set(arg, &opRel);
+            RETVAL = THIS->subtractNew(&opRel);
+        } else { // date
+            CLASS = DATEINT_CLASS;
+            Date opDate((ptime_t) 0);
+            date_set(arg, THIS->timezone(), &opDate);
+            RETVAL = (Date*) new DateInt(&opDate, THIS);
+        }
+    }
+OUTPUT:
+    RETVAL
+
+
+SV*
+Date::subtract (SV* arg, ...)
+PPCODE:
+    DateRel* operand;
+    if (sv_isobject(arg)) {
+        if (sv_isa(arg, DATEREL_CLASS)) operand = (DateRel *) SvIV(SvRV(arg));
+        else croak("Panda::Date: cannot '-=' unsupported object type");
+    }
+    else {
+        static DateRel acc;
+        daterel_set(arg, &acc);
+        operand = &acc;
+    }
+
+    THIS->subtract(operand);
+    XSRETURN(1);
+
+
+void
+Date::DESTROY ()

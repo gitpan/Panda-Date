@@ -1,0 +1,150 @@
+MODULE = Panda::Date                PACKAGE = Panda::Time
+PROTOTYPES: DISABLE
+#///////////////////////////// STATIC FUNCTIONS ///////////////////////////////////
+
+void
+tzset (SV* newzone = NULL)
+PPCODE:
+    if (newzone) panda::time::tzset(SvPV_nolen(newzone));
+    else panda::time::tzset();
+
+
+const char*
+tzdir (SV* newdirSV = NULL)
+CODE:
+    if (newdirSV) {
+        const char* newdir = SvOK(newdirSV) ? SvPV_nolen(newdirSV) : NULL;
+        if (tzdir(newdir)) RETVAL = "1";
+        else XSRETURN_UNDEF;
+    } else
+        RETVAL = tzdir();
+OUTPUT:
+    RETVAL
+
+
+const char*
+tzsysdir ()
+CODE:
+    RETVAL = tzsysdir();
+OUTPUT:
+    RETVAL
+
+    
+void
+gmtime (SV* epochSV = NULL)
+ALIAS:
+    localtime = 1
+PPCODE:
+    ptime_t epoch;
+    if (epochSV) epoch = (ptime_t) SvIV(epochSV);
+    else epoch = (ptime_t) time(NULL);
+    
+    datetime date;
+    if (ix == 0) gmtime(epoch, &date);
+    else localtime(epoch, &date);
+    
+    if (GIMME_V == G_ARRAY) {
+        EXTEND(SP, 9);
+        EXTEND_MORTAL(9);
+        mPUSHu(date.sec);
+        mPUSHu(date.min);
+        mPUSHu(date.hour);
+        mPUSHu(date.mday);
+        mPUSHu(date.mon);
+        mPUSHi(date.year);
+        mPUSHu(date.wday);
+        mPUSHu(date.yday);
+        mPUSHu(date.isdst);
+        XSRETURN(9);
+    } else {
+        EXTEND(SP, 1);
+        SV* ret = newSV(50);
+        SvPOK_on(ret);
+        char* str = SvPVX(ret);
+        size_t strlen = strftime(str, 50, "%a %b %e %H:%M:%S %Y", &date);
+        SvCUR_set(ret, strlen);
+        mPUSHs(ret);
+        XSRETURN(1);
+    }
+
+
+ptime_t
+timegm (SV* sec, SV* min, SV* hour, SV* mday, SV* mon, SV* year, SV* isdst = NULL)
+ALIAS:
+    timelocal  = 1
+    timegmn    = 2
+    timelocaln = 3
+CODE:
+    datetime date;
+    date.sec  = SvIV(sec);
+    date.min  = SvIV(min);
+    date.hour = SvIV(hour);
+    date.mday = SvIV(mday);
+    date.mon  = SvIV(mon);
+    date.year = SvIV(year);
+    
+    if (isdst) date.isdst = SvIV(isdst);
+    else date.isdst = -1;
+    
+    switch (ix) {
+        case 0:
+            RETVAL = timegml(&date);
+            break;
+        case 1:
+            RETVAL = timelocall(&date);
+            break;
+        case 2:
+            RETVAL = timegm(&date);
+            break;
+        case 3:
+            RETVAL = timelocal(&date);
+            break;
+    }
+    
+    if (ix & 2) {
+        sv_setiv(sec, date.sec);
+        sv_setiv(min, date.min);
+        sv_setiv(hour, date.hour);
+        sv_setiv(mday, date.mday);
+        sv_setiv(mon, date.mon);
+        sv_setiv(year, date.year);
+        if (isdst) sv_setiv(isdst, date.isdst);
+    }
+OUTPUT:
+    RETVAL
+
+
+time_t
+systimegm (int64_t sec, int64_t min, int64_t hour, int64_t mday, int64_t mon, int64_t year, int64_t isdst = -1)
+ALIAS:
+    systimelocal = 1
+CODE:
+    struct tm date;
+    date.tm_sec   = sec;
+    date.tm_min   = min;
+    date.tm_hour  = hour;
+    date.tm_mday  = mday;
+    date.tm_mon   = mon;
+    date.tm_year  = year;
+    date.tm_isdst = isdst;
+    if (ix == 0) RETVAL = timegm(&date);
+    else RETVAL = timelocal(&date);
+OUTPUT:
+    RETVAL
+
+
+HVR
+tzget (const char* zonename = NULL)
+CODE:
+    RETVAL = export_timezone(tzget(zonename));
+OUTPUT:
+    RETVAL
+
+
+const char*
+tzname ()
+CODE:
+    RETVAL = tzlocal()->name;
+OUTPUT:
+    RETVAL
+

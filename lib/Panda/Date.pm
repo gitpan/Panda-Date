@@ -1,14 +1,15 @@
 package Panda::Date;
 use parent 'Panda::Export';
 use 5.012;
+use Panda::Time;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '1.6';
+our $VERSION = $Panda::Time::VERSION;
 
 =head1 NAME
 
-Panda::Date - fast Class::Date compatible framework. In C :-)
+Panda::Date - fast Date framework in C.
 
 =cut
 
@@ -16,60 +17,56 @@ use Panda::Export {
     E_OK         => 0,
     E_UNPARSABLE => 1,
     E_RANGE      => 2,
-};
-
-use overload '""'     => \&to_string,
-             'bool'   => \&to_bool,
-             '0+'     => \&to_number,
-             '<=>'    => \&compare,
-             'cmp'    => \&compare,
-             '+'      => \&add,
-             '+='     => \&add_me,
-             '-'      => \&subtract,
-             '-='     => \&subtract_me,
-             fallback => 1;
-
-require XSLoader;
-XSLoader::load('Panda::Date', $VERSION);
-
-# can't place this into compile-time code because there is no XS code at that time.
-Panda::Export->import({
     SEC          => rdate_const("1s"),
     MIN          => rdate_const("1m"),
     HOUR         => rdate_const("1h"),
     DAY          => rdate_const("1D"),
     MONTH        => rdate_const("1M"),
     YEAR         => rdate_const("1Y"),
-});
+};
+
+use overload
+    '""'     => \&to_string,
+    'bool'   => \&to_bool,
+    '0+'     => \&to_number,
+    '<=>'    => \&compare,
+    'cmp'    => \&compare,
+    '+'      => \&add_new,
+    '+='     => \&add,
+    '-'      => \&subtract_new,
+    '-='     => \&subtract,
+    '='      => sub { $_[0] },
+    fallback => 1;
 
 =head1 DESCRIPTION
 
-Panda::Date is almost fully compatible with Class::Date, but has several more features and much greater perfomance.
-It is 100% written in C/C++.
+Panda::Date is almost fully compatible with L<Class::Date>, but has several more features and much greater perfomance.
+It is written fully in C/C++.
 
-By itself, Panda::Date supports dates between -2**31 and 2**31-1 years. But because of most OS mktime's restrictions
-only [1900, 2**31-1] years are supported.
+Panda::Date supports dates between -2147483648/01/01 00:00:00 and 2147483647/12/31 23:59:59.
+
+With Panda::Date you can perform some operations even faster than in plain C program using stdlibc functions.
+See L<Panda::Time> why.
 
 =head1 SYNOPSIS
 
+    use Panda::Time qw/tzset/;
     use Panda::Date qw/now date today rdate idate :const/;
     
-    my $date = Panda::Date->new($epoch);
+    my $date = Panda::Date->new($epoch); # using server's local timezone
     $date = Panda::Date->new([$y,$m,$d,$h,$m,$s]);
     $date = Panda::Date->new({year => $y, month => $m, day => $d, hour => $h, min => $m, sec => $s});
     $date = Panda::Date->new("2013-03-05 23:45:56");
-    $date = now; # same as Panda::Date->new(time()) but faster
-    $date = Panda::Date::now();
-    $date = Panda::Date->now;
-    $date = today; # same as Panda::Date->new(time())->truncate but faster
-    $date = Panda::Date::today();
-    $date = Panda::Date->today;
+    $date = now(); # same as Panda::Date->new(time()) but faster
+    $date = today(); # same as Panda::Date->new(time())->truncate but faster
     
     # create using function 'date'
+    tzset('Europe/Moscow'); # using 'Europe/Moscow' as server's local timezone
     $date = date [$year,$month,$day,$hour,$min,$sec]; 
     $date = date { year => $year, month => $month, day => $day, hour => $hour, min => $min, sec => $sec };
-    $date = date "2001-11-12 07:13:12";
+    $date = date "2001/11/12 07:13:12";
     $date = date 123456789;
+    $date = date("2001/11/12 07:13:12", 'America/New_York'); # $date operates in custom time zone
     
     # creating relative date object
     # (normally you don't need to create this object explicitly)
@@ -110,7 +107,7 @@ only [1900, 2**31-1] years are supported.
     $date->_yday;       # [0-365]
     $date->isdst;       # DST?
     $date->daylight_savings; # same as prev.
-    $date->strftime($format) # POSIX strftime (without the huge POSIX.pm)
+    $date->strftime($format);
     $date->monname;     # name of month, eg: March
     $date->monthname;   # same as prev.
     $date->wdayname;    # Thursday
@@ -124,9 +121,12 @@ only [1900, 2**31-1] years are supported.
     $date->string       # 2000-02-29 12:21:11 (format can be changed)
     "$date"             # same as prev.
     $date->iso          # 2000-02-29 12:21:11
-    $date->tzoffset     # timezone-offset (in seconds)
-    $date->tz           # returns the base timezone as you specify, eg: CET
-    $date->tzdst        # returns the real timezone with dst information, eg: CEST
+    $date->gmtoff       # current offset from UTC (in seconds)
+    $date->tzname       # returns the timezone name (EST, EET, etc)
+    $date->tzlocal      # true if $date is in local time zone
+    $date->tz           # returns timezone info
+    $date->tz('GMT+5')  # changes $date's timezone (saving YMDhms)
+    $date->to_tz('UTC') # changes $date's timezone (saving epoch)
     
     ($year,$month,$day,$hour,$min,$sec)=$date->array;
     ($year,$month,$day,$hour,$min,$sec)=@{ $date->aref };
@@ -143,19 +143,19 @@ only [1900, 2**31-1] years are supported.
     
     # constructing new date based on an existing one:
     $new_date = $date->clone;
-    $new_date = $date->clone({year => 1977, sec => 14});
-    # valid keys: year, _year, month, _month, day, hour, min, sec
+    $new_date = $date->clone({year => 1977, sec => 14, tz => 'Australia/Melbourne'});
+    # valid keys: year, _year, month, _month, day, hour, min, sec, tz
     
     $date->month_begin  # First day of the month (date object)
     $date->month_end    # Last day of the month
     $date->days_in_month # 28..31
     
     # changing date stringify format globally
-    Panda::Date->string_format("%Y%m%d%H%M%S");
+    Panda::Date::string_format("%Y%m%d%H%M%S");
     print $date       # result: 20011222000000
-    Panda::Date->string_format(undef);
+    Panda::Date::string_format(undef);
     print $date       # result: 2000-02-29 12:21:11
-    Panda::Date->string_format("%Y/%m/%d");
+    Panda::Date::string_format("%Y/%m/%d");
     print $date       # result: 1994/10/13
     
     # error handling
@@ -167,16 +167,10 @@ only [1900, 2**31-1] years are supported.
       print $a->errstr;
     }
     
-    # "month-border adjust" flag 
-    Panda::Date->month_border_adjust(0); # this is the default
-    print date("2001-01-31")+'1M'; # will print 2001-03-03
-    Panda::Date->month_border_adjust(1);
-    print date("2001-01-31")+'1M'; # will print 2001-02-28
-    
     # date range check
-    Panda::Date->range_check(0); # this is the default
+    Panda::Date::range_check(0); # this is the default
     print date("2001-02-31"); # will print 2001-03-03
-    Panda::Date->range_check(1);
+    Panda::Date::range_check(1);
     print date("2001-02-31"); # will print nothing
     
     # getting values of a relative date object
@@ -209,17 +203,18 @@ only [1900, 2**31-1] years are supported.
     $date2    = $date-'3Y';      # 3 Yearss
     $date3    = $date-[1,2,3];   # $date minus 1 year, 2 months, 3 days
     
-    $intdate = $date1-$date2;
+    $intdate  = $date1-$date2;
     $intdate2 = date('2000-11-12')-'2000-11-10';
-    $intdate3    = $date3-'1977-11-10';
+    $intdate3 = $date3-'1977-11-10';
     
     $intdate = date("2013-10-25") - "2012-03-10";
-    $intdate->from;                # lower date in interval (2012-03-10)
-    $intdate->till;                # upper date in interval (2013-10-25)
-    $reldate = $intdate->relative; # relative date ("1Y 7M 15D")
-    $intdate->sec;                 # accurate number of seconds in interval
-    $intdate->month;               # accurate number of months in interval
-    $reldate->to_sec;              # number of seconds in relative date (inaccurate)
+    $intdate->from;                  # lower date in interval (2012-03-10)
+    $intdate->till;                  # upper date in interval (2013-10-25)
+    $reldate = $intdate->relative;   # relative date ("1Y 7M 15D")
+    $intdate->sec;                   # accurate number of seconds in interval
+    $intdate->month;                 # accurate number of months in interval
+    $reldate->to_sec;                # number of seconds in relative date (inaccurate)
+    $intdate->includes("2013-01-01") # returns -1, 0, or 1
     
     $days_between = (Class::Date->new('2001-11-12')-'2001-07-04')->day;
     
@@ -235,8 +230,10 @@ only [1900, 2**31-1] years are supported.
     
     # Named interface ($date2 does not necessary to be a Class::Date object)
     $date1->string;               # same as $date1 in scalar context
-    $date1->subtract($date2);     # same as $date1 - $date2
-    $date1->add($date2);          # same as $date1 + $date2
+    $date1->subtract($date2);     # same as $date1 -= $date2
+    $date1->subtract_new($date2); # same as $date1 - $date2
+    $date1->add($date2);          # same as $date1 += $date2
+    $date1->add_new($date2);      # same as $date1 + $date2
     $date1->compare($date2);      # same as $date1 <=> $date2
     
     $reldate1->sec;               # same as $reldate1 in numeric or scalar context
@@ -244,11 +241,17 @@ only [1900, 2**31-1] years are supported.
     $reldate1->add($reldate2);    # same as $reldate1 + $reldate2
     $reldate1->neg                # used for subtraction
 
+
 =head1 CLASS METHODS
 
-=head4 new($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
+=head4 new($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date, [$timezone])
 
-Creates a date object using one of these source data types:
+Creates a date object.
+
+If $timezone is present, created object will operate as if C<tzset($timezone)> was called, but without calling C<tzset()>.
+
+If $timezone is absent (or undef or ""), $date uses local timezone.
+Further changes of local timezone via C<tzset()> won't affect constructed object.
 
 =over
 
@@ -264,7 +267,7 @@ If some args are missing, will use defaults [2000,1,1,0,0,0]
 
 If some args are missing, will use defaults defined in previous section.
 
-=item "YYYY-MM-DD HH:MM:SS"
+=item "YYYY-MM-DD HH:MM:SS" or "YYYY/MM/DD HH:MM:SS"
 
 A standard ISO(-like) date format. Additional ".fraction" part is ignored.
 Any number of trailing parameters can be missing. So the actual format is "YYYY-[MM[-DD[ HH[:MM[:SS[.MS]]]]]]"
@@ -273,53 +276,34 @@ If some args are missing, will use defaults defined in previous section.
 
 =item Another date object
 
-Clones another object
+Clones another object.
+
+If $timezone parameter is absent (or undef or ""), newly created date will use $date's timezone.
+Otherwise constructed date is converted to timezone $timezone preserving YMDhms information.
 
 =back
 
 If there is any error while creating an object, properties error() and errstr() will be set.
 The object itself will return false in boolean context, empty string in string context and so on.
 
+=head1 FUNCTIONS
+
 =head4 now()
 
-Same as
-
-    Panda::Date->new(time());
-    
-but runs much faster. Can be called as function, class method or object method.
+Same as Panda::Date->new(time()) but runs faster.
 
 =head4 today()
 
-Same as 
-
-    Panda::Date->new(time())->truncate
-    
-but runs much faster. Can be called as function, class method or object method.
+Same as Panda::Date->new(time())->truncate but runs faster.
 
 =head4 today_epoch()
 
-Same as
-
-    today()->epoch
-
-but runs faster. Can be called as function, class method or object method.
+Same as today()->epoch but runs faster.
 
 =head4 string_format([$format])
 
-strftime-compatible format that will be used to stringify the date with '.', "", to_string(), string() or as_string().
-If it's false (the default) then iso() will be used.
-
-=head4 month_border_adjust([$bool])
-
-Used to switch on or off the month-adjust feature. This is used only when someone adds months or years to a 
-date and then the resulted date became invalid. An example: adding one month to "2001-01-31" will result "2001-02-31", 
-and this is an invalid date.
-
-When month_border_adjust is false, this result simply normalized, and becomes "2001-03-03". This is the default behaviour.
-
-When month_border_adjust is true, this result becomes "2001-02-28". So when the date overflows, then it returns the last day insted.
-
-Both settings keeps the time information.
+strftime-compatible format that is used to stringify the date with '.', "", to_string(), string() or as_string().
+If it's false (the default) then iso() is used.
 
 =head4 range_check([$true_false])
 
@@ -329,42 +313,28 @@ when range_check is not set (the default), then these date values are automatica
 
 when range_check is set, then a date "2001-02-31" became invalid date and error() is set to E_RANGE.
 
-=head1 FUNCTIONS
+=head4 date($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date, [$timezone])
 
-=head4 date($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
-
-Same as
-
-    Panda::Date->new($arg);
-
-=head4 now(), today()
-
-See CLASS METHODS
+Same as Panda::Date->new($arg, [$timezone])
 
 =head4 rdate($rel_string | $seconds | \@rel_array | \%rel_hash | $reldate)
 
-Same as
-
-    Panda::Date::Rel->new($arg);
+Same as Panda::Date::Rel->new($arg)
     
 =head4 rdate($from, $till)
 
-Same as
-
-    Panda::Date::Rel->new(from, till);
+Same as Panda::Date::Rel->new($from, $till)
     
 =head4 idate($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date, $epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
 
-Same as
-
-    Panda::Date::Int->new($arg1, $arg2);
+Same as Panda::Date::Int->new($arg1, $arg2)
 
 
 =head1 OBJECT METHODS
 
-=head4 set_from($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
+=head4 set($epoch | \@ymdhms | \%ymdhms | $iso_fmt | $date)
 
-Set date from data or another date. This is much faster than creating new object.
+Set date from argument or another date. This is much faster than creating new object.
 
 =head4 epoch([$epoch])
 
@@ -372,7 +342,7 @@ UNIX timestamp (64bit)
 
 =head4 year([$year])
 
-Year [1900, 2**31-1]
+Year [-2**31, 2**31-1]
 
 =head4 _year([$year])
 
@@ -437,7 +407,7 @@ Is daylight savings time in effect now (true/false).
 
 =head4 strftime($format)
 
-Works like strftime from POSIX (POSIX is not used!)
+Works like strftime from C POSIX
 
 =head4 monthname(), monname()
 
@@ -449,23 +419,23 @@ Full name of the day in the nominative case.
 
 =head4 hms()
 
-Same as strftime('%H:%M:%S') but much faster
+Same as C<strftime('%H:%M:%S')> but much faster
 
 =head4 ymd()
 
-Same as strftime('%Y/%m/%d') but much faster
+Same as C<strftime('%Y/%m/%d')> but much faster
 
 =head4 mdy()
 
-Same as strftime('%m/%d/%Y') but much faster
+Same as C<strftime('%m/%d/%Y')> but much faster
 
 =head4 dmy()
 
-Same as strftime('%d/%m/%Y') but much faster
+Same as C<strftime('%d/%m/%Y')> but much faster
 
 =head4 "", to_string(), string(), as_string()
 
-By default returns iso(). String format can be changed via string_format()
+By default returns C<iso()>. String format can be changed via C<string_format()>
 
 =head4 'bool', to_bool()
 
@@ -479,15 +449,15 @@ Returns TRUE if date has no errors (i.e. has no parsing or out of range errors, 
 
 =head4 '0+', to_number()
 
-Returns epoch() in numeric context
+Returns C<epoch()> in numeric context
 
 =head4 iso(), sql()
 
-Same as strftime('%Y-%m-%d %H:%M:%S') but much faster
+Same as C<strftime('%Y-%m-%d %H:%M:%S')> but much faster
 
 =head4 mysql()
 
-Same as strftime('%Y%m%d%H%M%S') but much faster
+Same as C<strftime('%Y%m%d%H%M%S')> but much faster
 
 =head4 ampm()
 
@@ -497,17 +467,33 @@ Returns string 'AM' or 'PM'
 
 Returns time in "11:35 AM" format (american 12h style)
 
-=head4 tzoffset()
+=head4 gmtoff()
 
 Returns current timezone offset from UTC in seconds
 
-=head4 tz()
+=head4 tzname()
 
-Returns base name of the current timezone
+Returns the name of the object's timezone (Europe/Moscow, America/New_York, etc).
 
-=head4 tzdst()
+=head4 tzabbr()
 
-Returns full name of the current timezone (depends on whether DST is active at the moment pointed to by date or not)
+Returns timezone abbreviation (EST, EET, etc) - may change when the date changes isdst/nodst.
+
+=head4 tzlocal()
+
+Returns TRUE if this object's timezone is set as local.
+
+=head4 tz([$newzone])
+
+With no arguments returns information about object's timezone. See L<Panda::Time/tzget([$zone])>.
+
+With argument changes the timezone of current object to $newzone preserving YMDhms information (epoch may change) and 
+returns nothing.
+
+=head4 to_tz($newzone)
+
+Changes the timezone of current object to $newzone in a way that changed date still points to the same time moment (same epoch).
+YMDhms info may change. Returns nothing.
 
 =head4 array()
 
@@ -540,27 +526,34 @@ year, month are human-friendly (2013 year, month [1-12])
 
 Same as {href()} (hash reference)
 
-=head4 clone([\%diff])
+=head4 clone([\@diff | \%diff, [$timezone]])
 
-Returns copy of the date. If you pass a hash ref then new date object will have these changes.
+Returns copy of the date.
 
-Supported keys: 'year' (YYYY), '_year' (YYYY-1900), 'month' [1-12], '_month' [0-11], 'day', 'hour', 'min', 'sec'.
+If you pass a hash or array ref then date is cloned with changes described in the hash/array.
+Hash keys: 'year' (YYYY), 'month' [1-12], 'day', 'hour', 'min', 'sec'.
+Array: [$year (YYYY), $month [1-12], $day, $hour, $min, $sec]
 
-=head4 month_begin()
+If any values in hash or array are absent (or = undef or = -1) the appropriate field of date is not changed.
+
+If $timezone parameter is absent (or undef or ""), newly created date will use $date's timezone.
+Otherwise constructed date is converted to timezone $timezone preserving YMDhms information.
+
+=head4 month_begin_new()
 
 Returns the beggining of month. Only day of month is changed, HMS are preserved.
 
-=head4 month_begin_me()
+=head4 month_begin()
 
-Same as month_begin() but changes current object instead of cloning.
+Same as C<month_begin_new()> but changes current object instead of cloning.
 
-=head4 month_end()
+=head4 month_end_new()
 
 Returns the end of month. Only day of month is changed, HMS are preserved.
 
-=head4 month_end_me()
+=head4 month_end()
 
-Same as month_end() but changes current object instead of cloning.
+Same as C<month_end_new()> but changes current object instead of cloning.
 
 =head4 days_in_month()
 
@@ -574,36 +567,36 @@ Returns error code occured during creating or cloning object (if any). If no err
 
 Returns error string if any, otherwise undef.
 
+=head4 truncate_new()
+
+Return copy of the current date with HMS set to 0. Same as C<clone({hour => 0, min => 0, sec => 0})>, but much faster.
+
 =head4 truncate()
 
-Return copy of the current date with HMS set to 0. Same as ->clone({hour => 0, min => 0, sec => 0}), but much faster.
-
-=head4 truncate_me()
-
-Same as truncate_me() but changes current object instead of cloning. This is extremely faster.
+Same as C<truncate_new()> but changes current object instead of cloning. It's extremely faster.
 
 =head4 '<=>', 'cmp', compare($date | $iso_string | $epoch | \@array | \%hash)
 
 Compares 2 dates and returns -1, 0 or 1. If second operand is not an object then it's created.
 If second operand is object but not Panda::Date then it croaks.
 
-=head4 '+', add($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
+=head4 '+', add_new($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
-Adds a relative date to date object.  If second operand is not an object then it's created (L<Panda::Date::Rel>).
+Adds a relative date to date object. If second operand is not an object then it's created (L<Panda::Date::Rel>).
 
-=head4 '+=', add_me($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
+=head4 '+=', add($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
-Same as add() but changes current object instead of creating new one.
+Same as C<add_new()> but changes current object instead of creating new one.
 
-=head4 '-', subtract($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash | $date | $iso_string)
+=head4 '-', subtract_new($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash | $date | $iso_string)
 
 Subtracts a relative date or another date from the date object. In case of relative date the result is a L<Panda::Date> object.
 Otherwise the result is L<Panda::Date::Int>.
 If second operand is not an object then it's created (L<Panda::Date::Rel> or L<Panda::Date>).
 
-=head4 '-=', subtract_me($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
+=head4 '-=', subtract($reldate | $rel_string | $seconds | \@rel_array | \%rel_hash)
 
-Same as subtract() but changes current object instead of creating new one.
+Same as C<subtract()> but changes current object instead of creating new one. Operand can only be a L<Panda::Date::Rel> object.
 
 =head1 CONSTANTS
 
@@ -623,7 +616,7 @@ Invalid date (or date part) supplied when range_check() is in effect
 
 Constant for rdate("1Y"). These (YEAR...SEC) objects are constants (read-only).
 
-If you try to change these objects you'll get an exception.
+If you try to change these objects they'll croak.
 
 =head4 MONTH
 
@@ -653,14 +646,6 @@ See screenshot L<http://crazypanda.ru/v/clip2net/a/v/ri93sO22KI.png>
 
 =over
 
-=item Panda::Date doesn't support per-object timezones yet.
-
-It works in default (user) timezone. You can change it via $ENV{TZ} + POSIX::tzset.
-
-=item Panda::Date constructor doesn't support "YYYYMMDDhhmmss" format as well as -DateParse feature
-
-For now.
-
 =item day_of_week() returns wday()
 
 In Class::Date it returns _wday()
@@ -679,18 +664,7 @@ Class::Date's clone() receives list of key-value pairs and supports key aliases 
 
 =item there is no DST_ADJUST setting.
 
-Panda::Date always performs all calculations with DST_ADJUST disabled for now. That means that
-(in MSK timezone there was DST change 27 mar 1:59:59 -> 3:00:00)
-
-2005-03-27 01:00:01 + 1h = 2005-03-27 02:00:01 (not 2005-03-27 03:00:01).
-
-I believe that it doesn't matter in most cases. To fix that i would need to call mktime() after every calculation,
-but it's very slow (about 150_000/s on my machine) so i don't want to slow don't this module by 30x.
-
-I'm working on a effective solution of this problem (using timezone info without mktime() to calc DST borders)
-
-Anyway, in Class::Date, 2005-03-27 01:00:01 + 1h = 2005-03-27 01:00:01. You'll hang in infinite loop
-if you write "while ($date < $till) { $date += '1h'; }"
+Panda::Date always performs all calculations with DST_ADJUST enabled.
 
 =item Panda::Date::Rel constructors don't support ISO/SQL date format ("YYYY-MM-DD HH:MM:SS")
 
@@ -706,9 +680,9 @@ Class::Date::Rel consists of only months and seconds.
 
 =item Panda::Date::Rel's sec/min/hour/day/month/year returns properties of object.
 
-If you have relative date "1Y 2M", year() will return 1, month() - 2, day() - 0, etc. If you need to calculate
-all the period in, for example, months, use ->to_month() (will return 14). Such calculations can be inaccurate, for example,
-rdate("1M")->to_sec
+If you have relative date "1Y 2M", C<year()> would return 1, C<month()> - 2, C<day()> - 0, etc. If you need to calculate
+all the period in, for example, months, use C<to_month()> (would return 14).
+Such calculations can be inaccurate, for example, rdate("1M")->to_sec
 
 =item subtracting date from another date returns L<Panda::Date::Int> object, not a L<Panda::Date::Rel>
 
@@ -716,13 +690,33 @@ L<Panda::Date::Int> is an Interval object and is an absolutely new term.
 
 =back
 
+=head1 STORABLE SERIALIZATION
+
+Storable serialization is fully supported. That means you're able to freeze Panda::Date::* objects and 
+thaw serialized data back without losing any date information.
+
+If you serialize a date object which was created with personal timezone (second arg to constructor),
+then it will be deserialized exactly in the same timezone.
+
+If a date object is in local timezone, then it will be deserialized in local timezone too (which may differ on differrent servers), 
+but it's guaranteed that those two dates will point to the same time moment (epoch is preserved).
+
+For example:
+
+    tzset('Europe/Moscow');
+    my $date = date("2014-01-01");
+    my $frozen = freeze $date;
+    tzset('America/New_York');
+    my $date2 = thaw $frozen;
+    $date == $date2; # true, because $date->epoch == $date2->epoch
+    say $date;  # 2014-01-01 00:00:00
+    say $date2; # 2013-12-31 15:00:00
+
 =head1 CAVEATS
 
 =over
 
 =item Panda::Date doesn't support subclassing for now.
-
-Subclassing is manually turned off because enabling it will drop 20% perfomance off because in XS ->isa() is much slower than ref($a) eq "xxx".
 
 If you subclass Panda::Date it won't work correct.
 
@@ -730,101 +724,100 @@ If you subclass Panda::Date it won't work correct.
 
 You will receive SIGSEGV. If you want to clone a Panda::Date::* object, use it's clone() method.
 
-However, cloning and serializing/deserializing via L<Storable> is supported as Panda::Date::* classes define special hooks for Storable.
-But it's about 20 times slower than using clone() method.
+However, cloning and serializing/deserializing via L<Storable> is fully supported. Don't use it just to clone and object
+because it's 20x times slower than calling C<clone()>.
 
 =back
 
 =head1 PERFOMANCE
 
-Panda::Date operates 40-70x faster than Class::Date
+Panda::Date operates 40-70x faster than Class::Date, tests were performed on Core i7 3.2Ghz, MacOSX Lion, perl 5.12.4
 
     my $cdate = new Class::Date("2013-06-05 23:45:56");
     my $date  = new Panda::Date("2013-06-05 23:45:56");
     my $crel = Class::Date::Rel->new("1M");
     my $rel  = rdate("1M");
-    my @buff;
     
     timethese(-1, {
-        cdate_new_str   => sub { push @buff, new Class::Date("2013-01-25 21:26:43"); }, # push @buff to avoid calling DESTROY
-        panda_new_str   => sub { push @buff, new Panda::Date("2013-01-25 21:26:43"); },
-        cdate_new_epoch => sub { push @buff, new Class::Date(1000000000); },
-        panda_new_epoch => sub { push @buff, new Panda::Date(1000000000); },
-        panda_new_reuse => sub { state $date = new Panda::Date(0); $date->set_from(1000000000); },
+        cdate_new_str   => sub { new Class::Date("2013-01-25 21:26:43"); },
+        panda_new_str   => sub { new Panda::Date("2013-01-25 21:26:43"); },
+        cdate_new_epoch => sub { new Class::Date(1000000000); },
+        panda_new_epoch => sub { new Panda::Date(1000000000); },
+        panda_new_reuse => sub { state $date = new Panda::Date(0); $date->set(1000000000); },
         
         cdate_now => sub { Class::Date->now; },
         panda_now => sub { now(); },
         
-        cdate_truncate    => sub { $cdate->truncate },
-        panda_truncate_me => sub { $date->truncate_me },
-        panda_truncate    => sub { $date->truncate },
-        cdate_today  => sub { Class::Date->now->truncate; },
-        panda_today1 => sub { now()->truncate_me; },
-        panda_today2 => sub { today(); },
-        cdate_stringify => sub { $cdate->string },
-        panda_stringify => sub { $date->to_string },
-        cdate_strftime => sub { $cdate->strftime("%H:%M:%S") },
-        panda_strftime => sub { $date->strftime("%H:%M:%S") },
+        cdate_truncate     => sub { $cdate->truncate },
+        panda_truncate_new => sub { $date->truncate_new },
+        panda_truncate     => sub { $date->truncate },
+        cdate_today        => sub { Class::Date->now->truncate; },
+        panda_today1       => sub { now()->truncate; },
+        panda_today2       => sub { today(); },
+        cdate_stringify    => sub { $cdate->string },
+        panda_stringify    => sub { $date->to_string },
+        cdate_strftime     => sub { $cdate->strftime("%H:%M:%S") },
+        panda_strftime     => sub { $date->strftime("%H:%M:%S") },
         cdate_clone_simple => sub { $cdate->clone },
         panda_clone_simple => sub { $date->clone },
         cdate_clone_change => sub { $cdate->clone(year => 2008, month => 12) },
         panda_clone_change => sub { $date->clone({year => 2008, month => 12}) },
-        cdate_rel_new_sec => sub { new Class::Date::Rel 1000 },
-        pdate_rel_new_sec => sub { new Panda::Date::Rel 1000 },
-        cdate_rel_new_str => sub { new Class::Date::Rel "1Y 2M 3D 4h 5m 6s" },
-        panda_rel_new_str => sub { new Panda::Date::Rel "1Y 2M 3D 4h 5m 6s" },
-        cdate_add     => sub { $cdate = $cdate + '1M' },
-        panda_add     => sub { $date = $date + '1M' },
-        panda_add_me  => sub { $date += '1M' },
-        panda_add_me2 => sub { $date += MONTH },
-        panda_add_me3 => sub { $date->month($date->month+1) },
-        cdate_compare => sub { $cdate == $cdate },
-        panda_compare => sub { $date == $date },
+        cdate_rel_new_sec  => sub { new Class::Date::Rel 1000 },
+        pdate_rel_new_sec  => sub { new Panda::Date::Rel 1000 },
+        cdate_rel_new_str  => sub { new Class::Date::Rel "1Y 2M 3D 4h 5m 6s" },
+        panda_rel_new_str  => sub { new Panda::Date::Rel "1Y 2M 3D 4h 5m 6s" },
+        cdate_add          => sub { $cdate = $cdate + '1M' },
+        panda_add_new      => sub { $date = $date + '1M' },
+        panda_add          => sub { $date += '1M' },
+        panda_add2         => sub { $date += MONTH },
+        panda_add3         => sub { $date->month($date->month+1) },
+        cdate_compare      => sub { $cdate == $cdate },
+        panda_compare      => sub { $date == $date },
     });
     
     #RESULTS
     
-    #cdate_new_epoch:  2 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 45386.90/s (n=47869)
-    #panda_new_epoch:  2 wallclock secs ( 1.06 usr +  0.03 sys =  1.09 CPU) @ 1006632.23/s (n=1101004)
-    #cdate_new_str:  1 wallclock secs ( 1.10 usr +  0.00 sys =  1.10 CPU) @ 15616.91/s (n=17203)
-    #panda_new_str:  0 wallclock secs ( 0.98 usr +  0.09 sys =  1.07 CPU) @ 866252.61/s (n=927161)
-    #panda_new_reuse:  2 wallclock secs ( 1.02 usr +  0.00 sys =  1.02 CPU) @ 7247433.28/s (n=7417295)
+    #cdate_new_epoch:  2 wallclock secs ( 1.11 usr +  0.00 sys =  1.11 CPU) @ 59609.01/s (n=66166)
+    #panda_new_epoch:  1 wallclock secs ( 1.08 usr +  0.01 sys =  1.09 CPU) @ 1485434.86/s (n=1619124)
+    #cdate_new_str:  1 wallclock secs ( 1.09 usr +  0.01 sys =  1.10 CPU) @ 19549.09/s (n=21504)
+    #panda_new_str:  1 wallclock secs ( 1.01 usr +  0.00 sys =  1.01 CPU) @ 1238753.47/s (n=1251141)
+    #panda_new_reuse:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 5242879.05/s (n=5505023)
     
-    #cdate_now:  1 wallclock secs ( 1.02 usr +  0.05 sys =  1.07 CPU) @ 41146.86/s (n=44040)
-    #panda_now:  1 wallclock secs ( 1.02 usr +  0.11 sys =  1.12 CPU) @ 1043915.56/s (n=1174405)
+    #cdate_now:  1 wallclock secs ( 1.11 usr +  0.00 sys =  1.11 CPU) @ 55350.45/s (n=61439)
+    #panda_now:  1 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 1341379.63/s (n=1448690)
     
-    #cdate_truncate:  1 wallclock secs ( 1.09 usr +  0.00 sys =  1.09 CPU) @ 20277.41/s (n=22020)
-    #panda_truncate:  2 wallclock secs ( 1.09 usr +  0.00 sys =  1.09 CPU) @ 1247845.29/s (n=1355082)
-    #panda_truncate_me:  0 wallclock secs ( 1.06 usr +  0.00 sys =  1.06 CPU) @ 8289918.12/s (n=8808038)
+    #cdate_truncate:  1 wallclock secs ( 1.07 usr +  0.00 sys =  1.07 CPU) @ 25120.56/s (n=26879)
+    #panda_truncate:  1 wallclock secs ( 1.02 usr +  0.00 sys =  1.02 CPU) @ 7710116.67/s (n=7864319)
+    #panda_truncate_new:  1 wallclock secs ( 1.00 usr +  0.00 sys =  1.00 CPU) @ 1376255.00/s (n=1376255)
     
-    #cdate_today:  1 wallclock secs ( 1.04 usr +  0.02 sys =  1.05 CPU) @ 13048.41/s (n=13762)
-    #panda_today1:  1 wallclock secs ( 0.99 usr +  0.07 sys =  1.06 CPU) @ 592136.47/s (n=629145)
-    #panda_today2:  1 wallclock secs ( 0.95 usr +  0.09 sys =  1.03 CPU) @ 657009.45/s (n=677541)
+    #cdate_today:  1 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 16591.67/s (n=17919)
+    #panda_today1:  1 wallclock secs ( 1.03 usr +  0.00 sys =  1.03 CPU) @ 1027823.30/s (n=1058658)
+    #panda_today2:  1 wallclock secs ( 1.03 usr +  0.01 sys =  1.04 CPU) @ 1323322.12/s (n=1376255)
     
-    #cdate_stringify:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 84136.12/s (n=88080)
-    #panda_stringify:  1 wallclock secs ( 1.03 usr +  0.00 sys =  1.03 CPU) @ 4019354.18/s (n=4144959)
+    #cdate_stringify:  1 wallclock secs ( 1.09 usr +  0.00 sys =  1.09 CPU) @ 92839.45/s (n=101195)
+    #panda_stringify:  2 wallclock secs ( 1.09 usr +  0.00 sys =  1.09 CPU) @ 5072344.04/s (n=5528855)
     
-    #cdate_strftime:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 91452.18/s (n=95739)
-    #panda_strftime:  2 wallclock secs ( 1.06 usr +  0.00 sys =  1.06 CPU) @ 1441724.24/s (n=1531832)
+    #cdate_strftime:  1 wallclock secs ( 1.06 usr +  0.00 sys =  1.06 CPU) @ 101433.02/s (n=107519)
+    #panda_strftime:  2 wallclock secs ( 1.06 usr +  0.01 sys =  1.07 CPU) @ 1513200.00/s (n=1619124)
     
-    #cdate_clone_simple:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 21747.67/s 
-    #panda_clone_simple:  1 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 1256887.65/s
-    #cdate_clone_change:  2 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 20878.22/s 
-    #panda_clone_change:  1 wallclock secs ( 1.04 usr +  0.00 sys =  1.04 CPU) @ 605492.93/s 
+    #cdate_clone_simple:  1 wallclock secs ( 1.07 usr +  0.00 sys =  1.07 CPU) @ 26796.26/s (n=28672)
+    #panda_clone_simple:  2 wallclock secs ( 1.03 usr +  0.00 sys =  1.03 CPU) @ 1670213.59/s (n=1720320)
+    #cdate_clone_change:  2 wallclock secs ( 1.11 usr +  0.00 sys =  1.11 CPU) @ 25830.63/s (n=28672)
+    #panda_clone_change:  1 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 637154.63/s (n=688127)
     
-    #cdate_rel_new_sec:  2 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 145888.46/s (n=157286)
-    #cdate_rel_new_str:  1 wallclock secs ( 1.06 usr +  0.00 sys =  1.06 CPU) @ 43176.47/s (n=45875)
-    #panda_rel_new_sec:  2 wallclock secs ( 1.10 usr +  0.00 sys =  1.10 CPU) @ 695299.63/s (n=765916)
-    #panda_rel_new_str:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 647203.34/s (n=677541)
+    #cdate_rel_new_sec:  1 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 245059.26/s (n=264664)
+    #cdate_rel_new_str:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 68265.71/s (n=71679)
+    #pdate_rel_new_sec:  2 wallclock secs ( 1.02 usr +  0.00 sys =  1.02 CPU) @ 1420284.31/s (n=1448690)
+    #panda_rel_new_str:  1 wallclock secs ( 1.01 usr +  0.00 sys =  1.01 CPU) @ 1238753.47/s (n=1251141)
     
-    #cdate_add:  1 wallclock secs ( 1.09 usr +  0.02 sys =  1.10 CPU) @ 13881.19/s (n=15291)
-    #panda_add:  1 wallclock secs ( 1.08 usr +  0.00 sys =  1.08 CPU) @ 907751.88/s (n=978670)
-    #panda_add_me:  1 wallclock secs ( 1.07 usr +  0.00 sys =  1.07 CPU) @ 4389017.23/s (n=4697620)
-    #panda_add_me2:  1 wallclock secs ( 1.07 usr +  0.00 sys =  1.07 CPU) @ 4702518.19/s (n=5033164)
-    #panda_add_me3:  0 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 3036845.51/s (n=3202923)
+    #cdate_add:  1 wallclock secs ( 1.09 usr +  0.00 sys =  1.09 CPU) @ 17934.86/s (n=19549)
+    #panda_add:  0 wallclock secs ( 1.01 usr +  0.00 sys =  1.01 CPU) @ 4542099.01/s (n=4587520)
+    #panda_add2:  1 wallclock secs ( 1.03 usr +  0.00 sys =  1.03 CPU) @ 4858802.91/s (n=5004567)
+    #panda_add3:  1 wallclock secs ( 1.05 usr +  0.00 sys =  1.05 CPU) @ 2759410.48/s (n=2897381)
+    #panda_add_new:  2 wallclock secs ( 1.06 usr +  0.00 sys =  1.06 CPU) @ 1180321.70/s (n=1251141)
     
-    #cdate_compare:  1 wallclock secs ( 1.07 usr +  0.00 sys =  1.07 CPU) @ 60509.43/s (n=64764)
-    #panda_compare:  1 wallclock secs ( 1.06 usr +  0.00 sys =  1.06 CPU) @ 4421289.41/s (n=4697620)
+    #cdate_compare:  1 wallclock secs ( 1.10 usr +  0.00 sys =  1.10 CPU) @ 71087.27/s (n=78196)
+    #panda_compare:  2 wallclock secs ( 1.07 usr +  0.00 sys =  1.07 CPU) @ 3674914.95/s (n=3932159)
 
 =head1 AUTHOR
 
