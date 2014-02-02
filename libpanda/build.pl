@@ -1,9 +1,8 @@
 use 5.012;
 use ExtUtils::MakeMaker;
-use ExtUtils::Manifest qw(mkmanifest maniadd);
 use File::ShareDir::Install;
 
-our $CC = 'g++';
+our $CC = 'c++';
 
 sub write_lib_makefile {
     my %params = @_;
@@ -45,7 +44,7 @@ sub write_makefile {
     $postamble = {my => $postamble} if $postamble and !ref($postamble);
     $postamble ||= {};
     $postamble->{my} //= '';
-    
+
     if (my @xsi_files = glob('*.xsi') and $postamble->{my} !~ /\$\(XS_FILES\)\s+:/) {
         $postamble->{my} .= '$(XS_FILES): '.join(' ', @xsi_files)."\n\ttouch \$(XS_FILES)\n";
     }

@@ -6,6 +6,8 @@ namespace panda { namespace time {
 #  include "unix.h"
 #elif defined PTIME_OSTYPE_VMS
 #  include "vms.h"
+#elif defined PTIME_OSTYPE_WIN
+#  include "win.h"
 #else
 #  error "Should not be here"
 #endif

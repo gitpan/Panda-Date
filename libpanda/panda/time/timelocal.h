@@ -1,3 +1,5 @@
+#pragma once
+
 ptime_t timelocall (dt*);
 ptime_t timelocal  (dt*);
 ptime_t timeanyl   (dt*, const tz*);

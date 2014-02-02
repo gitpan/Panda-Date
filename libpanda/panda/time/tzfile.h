@@ -1,3 +1,5 @@
+#pragma once
+
 static const char* FTZ_MAGIC      = "TZif";
 static const int   FTZ_MAX_TIMES  = 1200;
 static const int   FTZ_MAX_TYPES  = 256;

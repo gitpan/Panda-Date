@@ -1,3 +1,5 @@
+#pragma once
+
 void _tz_lzname (char* lzname) {
     if (
         _from_env(lzname, "TZ")                ||
@@ -6,5 +8,5 @@ void _tz_lzname (char* lzname) {
         _from_env(lzname, "UCX$TZ")            ||
         _from_env(lzname, "TCPIP$TZ")
     ) return;
-    strcpy(lzname, PTIME_GMT_FILE);
+    strcpy(lzname, PTIME_GMT_FALLBACK);
 }

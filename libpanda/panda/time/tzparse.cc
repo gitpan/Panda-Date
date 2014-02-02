@@ -3,6 +3,7 @@
 #include <regex.h>
 #include <netinet/in.h>
 #include "time.h"
+#include <ctype.h>
 
 namespace panda { namespace time {
 
@@ -50,6 +51,108 @@ bool tzparse (char* content, tz* zone) {
     bool result = version >= 2 ? tzparse_bodyV2(ptr, head, zone) : tzparse_bodyV1(ptr, head, zone);
     return result;
 }
+
+inline void _tzparse_skip_spaces (const char* &str) { while (isspace(*str)) str++; }
+
+/*
+const enum pres_t { PRES_OK, PRES_ABSENT, PRES_ERROR };
+
+bool tzparse_rule2 (const char* rulestr, tzrule& rule) {
+    //_tzparse_skip_spaces(rulestr);
+    if (!_tzparse_rule_abbrev2(rulestr, rule.outer.abbrev)) return false;
+    //_tzparse_skip_spaces(rulestr);
+    
+    rule.outer.gmt_offset = _tzparse_rule_time(rulestr, m);
+    m += re_offset_cnt;
+
+    rule.outer.isdst = 0;
+    
+    rule.hasdst = m->rm_so == -1 ? 0 : 1; // conditional braces of all rest block
+    m++;
+    
+    if (rule.hasdst) {
+        if (!_tzparse_rule_abbrev(rulestr, m, rule.inner.abbrev)) return false;
+        m += re_abbrev_cnt;
+        
+        // conditional braces before dst offset
+        if ((m++)->rm_so != -1) rule.inner.gmt_offset = _tzparse_rule_time(rulestr, m);
+        else rule.inner.gmt_offset = rule.outer.gmt_offset + 3600;
+        m += re_offset_cnt;
+        
+        int32_t oswtype, iswtype;
+        if (!_tzparse_rule_switch(rulestr, m, &oswtype, &rule.outer.end)) return false;
+        m += re_switch_cnt;
+        if (!_tzparse_rule_switch(rulestr, m, &iswtype, &rule.inner.end)) return false;
+        m += re_switch_cnt;
+        
+        rule.inner.isdst = 1;
+        
+        if (oswtype != TZSWITCH_DATE || iswtype != TZSWITCH_DATE) {
+            //fprintf(stderr, "ptime: tz switch rules other than Mm.w.d (i.e. 'n' or 'Jn') are not supported (will consider no DST in this zone)\n");
+            rule.hasdst = 0;
+        }
+        else if (rule.outer.end.mon > rule.inner.end.mon) { // southern hemisphere
+            std::swap(rule.outer, rule.inner);
+        }
+    }
+    
+    return true;
+}
+
+
+
+
+
+
+
+
+
+pres_t _tzparse_rule_abbrev2 (const char* &str, char* dest) {
+    switch (*str) {
+        case ':': return PRES_ERROR;
+        case '<':
+            while (*str && *str != '>') str++;
+            if (*str == '>') str++;
+            else return PRES_ERROR;
+            break;
+        default:
+            char c;
+            while ((c = *str) && !isdigit(c) && c != ',' && c != '+' && c != '-') str++;
+            
+    }
+    
+    size_t len = ptr-str;
+    if (!len) return 0;
+
+    strncpy(dest, str, len);
+    dest[len] = '\0';
+    return len;
+}
+
+size_t _tzparse_rule_time2 (const char* str, int32_t* dest) {
+    const char* ptr;
+    *dest = - (int32_t) strtol(str, &ptr, 10) * 3600;
+    int sign = (*dest >= 0 ? 1 : -1);
+    if (*ptr == ':') {
+        str = ptr+1;
+        *dest += sign * (int32_t) strtol(str, &ptr, 10) * 60;
+        if (*ptr == ':') {
+            str = ptr+1;
+            *dest += sign * (int32_t) strtol(str, &ptr, 10);
+        }
+    }
+    
+    return ptr-str;
+}
+
+*/
+
+
+
+
+
+
+
 
 bool tzparse_rule (const char* rulestr, tzrule& rule) {
     if (!pattern_compiled) {
@@ -165,5 +268,7 @@ void _dump_matches (const char* str, regmatch_t* m, size_t n) {
         }
     }
 }
+
+
 
 }};

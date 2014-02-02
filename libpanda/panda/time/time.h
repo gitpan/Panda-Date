@@ -1,5 +1,4 @@
-#ifndef ptime_h_included
-#define ptime_h_included
+#pragma once
 
 #include <stdio.h>
 #include <stdint.h>
@@ -89,5 +88,3 @@ typedef datetime dt;
 #include "osdep.h"
 
 };};
-
-#endif

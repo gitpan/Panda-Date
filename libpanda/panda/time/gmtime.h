@@ -1,3 +1,5 @@
+#pragma once
+
 void gmtime (ptime_t epoch, dt* result);
 
 #ifdef __GNUC__

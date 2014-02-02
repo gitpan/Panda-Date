@@ -3,7 +3,7 @@ use parent 'Panda::Export';
 use 5.012;
 use File::ShareDir();
 
-our $VERSION = '2.0';
+our $VERSION = '2.1';
 
 require XSLoader;
 XSLoader::load('Panda::Date', $VERSION);
@@ -330,6 +330,8 @@ The following two lines are equivalent:
 
 =head4 time_t timeany (datetime* date, const tz* zone)
 
+Performs datetime -> epoch calculations in timezone 'zone'.
+
 The following two lines are equivalent:
 
     epoch = timelocal(date);
@@ -339,17 +341,7 @@ The following two lines are equivalent:
 
 More efficient (lite) version of C<timeany()>, doesn't change (normalize) values in date.
 
-Performs datetime -> epoch calculations in timezone 'zone'.
-
-=head4 igmtime()
-=head4 itimegm()
-=head4 itimegml()
-=head4 ilocaltime()
-=head4 itimelocal()
-=head4 itimelocall()
-=head4 ianytime()
-=head4 itimeany()
-=head4 itimeanyl()
+=head4 igmtime(), itimegm(), itimegml(), ilocaltime(), itimelocal(), itimelocall(), ianytime(), itimeany(), itimeanyl()
 
 Inline versions for even more perfomance.
 
@@ -357,8 +349,7 @@ Inline versions for even more perfomance.
 
 Behaves like POSIX's C<strftime()>.
 
-=head4 void dt2tm (struct tm &to, datetime &from)
-=head4 void tm2dt (datetime &to, struct tm &from)
+=head4 void dt2tm (struct tm &to, datetime &from), void tm2dt (datetime &to, struct tm &from)
 
 Performs struct tm <-> struct datetime convertations
 

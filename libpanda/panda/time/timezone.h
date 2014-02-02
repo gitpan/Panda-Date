@@ -1,3 +1,5 @@
+#pragma once
+
 #include "tzfile.h"
 
 const int TZSWITCH_DATE = 0;

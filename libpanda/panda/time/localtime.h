@@ -1,3 +1,5 @@
+#pragma once
+
 void localtime (ptime_t, dt*);
 void anytime   (ptime_t, dt*, const tz*);
 

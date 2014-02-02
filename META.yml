@@ -21,4 +21,4 @@ requires:
   File::ShareDir: 0
   Panda::Export: 0
   Test::Deep: 0
-version: 2.0
+version: 2.1

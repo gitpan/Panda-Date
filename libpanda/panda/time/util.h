@@ -1,3 +1,5 @@
+#pragma once
+
 char* readfile (const char*);
 
 inline int64_t char8_to_int64 (const char* source) {
@@ -10,12 +12,12 @@ inline int is_leap_year (int32_t year) {
 
 // DAYS PASSED SINCE 1 Jan 0001 00:00:00 TILL 1 Jan <year> 00:00:00
 inline ptime_t christ_days (int32_t year) {
-    ptime_t yearpos = (ptime_t) year + 2147483999L;
+    ptime_t yearpos = (ptime_t)year + 2147483999U;
     ptime_t ret = yearpos*365;
     yearpos >>= 2;
     ret += yearpos;
     yearpos /= 25;
-    ret -= yearpos - (yearpos >> 2) + 146097*5368710L;
+    ret -= yearpos - (yearpos >> 2) + (ptime_t)146097*5368710;
     return ret;
 }
 
@@ -59,22 +61,29 @@ inline void dt2tm (struct tm &to, dt &from) {
     to.tm_isdst  = from.isdst;
     to.tm_wday   = from.wday;
     to.tm_yday   = from.yday;
+#ifndef PTIME_OSTYPE_WIN	
     to.tm_gmtoff = from.gmtoff;
     to.tm_zone   = from.zone;
+#endif
 }
 
 inline void tm2dt (dt &to, struct tm &from) {
-    to.sec     = from.tm_sec;
-    to.min     = from.tm_min;
-    to.hour    = from.tm_hour;
-    to.mday    = from.tm_mday;
-    to.mon     = from.tm_mon;
-    to.year    = from.tm_year+1900;
-    to.isdst   = from.tm_isdst;
-    to.wday    = from.tm_wday;
-    to.yday    = from.tm_yday;
-    to.gmtoff  = from.tm_gmtoff;
-    to.n_zone  = char8_to_int64(from.tm_zone);
+    to.sec    = from.tm_sec;
+    to.min    = from.tm_min;
+    to.hour   = from.tm_hour;
+    to.mday   = from.tm_mday;
+    to.mon    = from.tm_mon;
+    to.year   = from.tm_year+1900;
+    to.isdst  = from.tm_isdst;
+    to.wday   = from.tm_wday;
+    to.yday   = from.tm_yday;
+#ifdef PTIME_OSTYPE_WIN
+	to.gmtoff = 0;
+	to.n_zone = 0;
+#else
+    to.gmtoff = from.tm_gmtoff;
+    to.n_zone = char8_to_int64(from.tm_zone);
+#endif
 }
 
 inline int days_in_month (int32_t year, uint8_t month) {

@@ -1,3 +1,5 @@
+2.1      02.02.2014
+           - change compiler g++ -> c++
 2.0      31.01.2014
            - Panda::Date is now built on top of libpanda-time - complete set of POSIX time functions written from scratch.
              It now works correctly with all ranges of dates in all timezones and perfomance has been greatly increased.

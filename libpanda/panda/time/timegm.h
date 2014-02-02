@@ -1,3 +1,5 @@
+#pragma once
+
 ptime_t timegml (dt* date);
 ptime_t timegm  (dt* date);
 

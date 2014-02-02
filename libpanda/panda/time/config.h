@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef likely
 #define likely(x)   __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
@@ -31,6 +33,10 @@
 #  include <endian.h>
 #  define PTIME_OSTYPE_VMS
 #  define PTIME_ZONEDIR "/usr/share/zoneinfo"
+
+#elif defined _WIN32
+#  define PTIME_OSTYPE_WIN
+#  define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 
 #else
 #error "Current operating system is not supported" 

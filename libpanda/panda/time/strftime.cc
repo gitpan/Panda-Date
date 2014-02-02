@@ -13,8 +13,10 @@ size_t strftime (char* buf, size_t maxsize, const char* format, const dt* timept
     tptr.tm_yday   = timeptr->yday;
     tptr.tm_wday   = timeptr->wday;
     tptr.tm_isdst  = timeptr->isdst;
+#ifndef PTIME_OSTYPE_WIN
     tptr.tm_gmtoff = timeptr->gmtoff;
     tptr.tm_zone   = (char*) timeptr->zone;
+#endif
     return strftime(buf, maxsize, format, &tptr);
 }
 

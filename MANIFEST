@@ -55,6 +55,7 @@ libpanda/panda/time/unix.h
 libpanda/panda/time/util.cc
 libpanda/panda/time/util.h
 libpanda/panda/time/vms.h
+libpanda/panda/time/win.h
 libpanda/panda/util.h
 libpanda/panda/util/util.h
 libpanda/svn-ignore.txt

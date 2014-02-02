@@ -1,8 +1,16 @@
+#pragma once
+
 #include <regex.h>
 
 bool _from_etc_localtime (char* lzname) {
     if (access("/etc/localtime", R_OK) != 0) return false;
     strcpy(lzname, ":/etc/localtime");
+    return true;
+}
+
+bool _from_usr_local_etc_localtime (char* lzname) {
+    if (access("/usr/local/etc/localtime", R_OK) != 0) return false;
+    strcpy(lzname, ":/usr/local/etc/localtime");
     return true;
 }
 
@@ -55,11 +63,12 @@ bool _from_etc_default_init (char* lzname) {
 
 void _tz_lzname (char* lzname) {
     if (
-        _from_env(lzname, "TZ")           ||
-        _from_etc_localtime(lzname)       ||
-        _from_etc_timezone(lzname)        ||
-        _from_etc_TIMEZONE(lzname)        ||
-        _from_etc_sysconfig_clock(lzname) ||
+        _from_env(lzname, "TZ")               ||
+        _from_etc_localtime(lzname)           ||
+        _from_usr_local_etc_localtime(lzname) ||
+        _from_etc_timezone(lzname)            ||
+        _from_etc_TIMEZONE(lzname)            ||
+        _from_etc_sysconfig_clock(lzname)     ||
         _from_etc_default_init(lzname)
     ) return;
     strcpy(lzname, PTIME_GMT_FALLBACK);
