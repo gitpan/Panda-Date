@@ -18,10 +18,22 @@ all :: static
 pure_all :: static
 test:;
 static :: mystatic$(LIB_EXT)
+END
+
+    if ($^O eq 'MSWin32') {
+        $postamble->{mystatic} .= << 'END';
+myar$(LIB_EXT): $(O_FILES); \
+    $(AR) cr mystatic$(LIB_EXT) $(O_FILES)
+mystatic$(LIB_EXT): myar$(LIB_EXT); \
+    $(RANLIB) mystatic$(LIB_EXT)
+END
+    } else {
+        $postamble->{mystatic} .= << 'END';
 mystatic$(LIB_EXT): $(O_FILES); \
     $(AR) cr mystatic$(LIB_EXT) $(O_FILES); \
     $(RANLIB) mystatic$(LIB_EXT)
 END
+    }
 
     $postamble->{install_share} = delete $params{INSTALL_SHARE};
     
@@ -46,7 +58,8 @@ sub write_makefile {
     $postamble->{my} //= '';
 
     if (my @xsi_files = glob('*.xsi') and $postamble->{my} !~ /\$\(XS_FILES\)\s+:/) {
-        $postamble->{my} .= '$(XS_FILES): '.join(' ', @xsi_files)."\n\ttouch \$(XS_FILES)\n";
+        my $touch_cmd = ($^O eq 'MSWin32') ? 'copy /b $(XS_FILES) +,,' : 'touch $(XS_FILES)';
+        $postamble->{my} .= '$(XS_FILES): '.join(' ', @xsi_files)."\n\t$touch_cmd\n";
     }
     
     my $ext = delete $params{MYEXTLIB};

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace panda { namespace time {
+
 ptime_t timelocall (dt*);
 ptime_t timelocal  (dt*);
 ptime_t timeanyl   (dt*, const tz*);
@@ -43,3 +45,5 @@ inline ptime_t itimelocall (dt* date) {
 inline ptime_t itimelocal (dt* date) {
     return itimeany(date, tzlocal());
 }
+
+};};

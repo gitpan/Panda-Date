@@ -7,8 +7,7 @@ use lib 't/lib'; use PDTest;
 foreach my $file (map {"local$_"} 1,2,3,4,5,6,7) {
     my $data = get_dates($file);
     while (my ($zone, $list) = each %$data) {
-        $ENV{TZ} = $zone;
-        tzset();
+        tzset($zone);
         foreach my $row (@$list) {
             my $result = join(',', &localtime($row->[0]));
             is($result, join(',', @{$row->[1]}), "localtime($zone): ".$row->[0]);
@@ -18,15 +17,21 @@ foreach my $file (map {"local$_"} 1,2,3,4,5,6,7) {
 
 tzset('Europe/Moscow');
 # check scalar context
-is(scalar &localtime(1387727619), 'Sun Dec 22 19:53:39 2013');
+if ($^O eq 'MSWin32') {
+    like(scalar &localtime(1387727619), qr/^\S+ \S+ 22 19:53:39 2013$/);
+} else {
+    is(scalar &localtime(1387727619), 'Sun Dec 22 19:53:39 2013');
+}
+
 # check past
-cmp_deeply([&localtime(-2940149821)], [19, 13, 14, 30, 9, 1876, 1, 303, 0]);
+cmp_deeply([&localtime(-2940149821)], [19, 13, 14, 30, 9, 1876, 1, 303, 0]) if is64bit();
 # check past before first transition
-cmp_deeply([&localtime(-2840149821)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]);
+cmp_deeply([&localtime(-2840149821)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]) if is64bit();
 # first transition
-cmp_deeply([&localtime(-2840149820)], [40, 59, 23, 31, 11, 1879, 3, 364, 0]);
-cmp_deeply([&localtime(-2840149801)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]);
-cmp_deeply([&localtime(-2840149800)], [0, 0, 0, 1, 0, 1880, 4, 0, 0]);
+cmp_deeply([&localtime(-2840149820)], [40, 59, 23, 31, 11, 1879, 3, 364, 0]) if is64bit();
+cmp_deeply([&localtime(-2840149801)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]) if is64bit();
+cmp_deeply([&localtime(-2840149800)], [0, 0, 0, 1, 0, 1880, 4, 0, 0]) if is64bit();
+
 # transition jump forward
 cmp_deeply([&localtime(1206831599)], [59, 59, 1, 30, 2, 2008, 0, 89, 0]);
 cmp_deeply([&localtime(1206831600)], [0, 0, 3, 30, 2, 2008, 0, 89, 1]);
@@ -44,24 +49,24 @@ cmp_deeply([&localtime(1401180400)], [40, 46, 12, 27, 4, 2014, 2, 146, 0]);
 # future dynamic rules for northern hemisphere
 tzset('America/New_York');
 # jump forward
-cmp_deeply([&localtime(3635132399)], [59, 59, 1, 11, 2, 2085, 0, 69, 0]);
-cmp_deeply([&localtime(3635132400)], [0, 0, 3, 11, 2, 2085, 0, 69, 1]);
+cmp_deeply([&localtime(3635132399)], [59, 59, 1, 11, 2, 2085, 0, 69, 0]) if is64bit();
+cmp_deeply([&localtime(3635132400)], [0, 0, 3, 11, 2, 2085, 0, 69, 1]) if is64bit();
 # jump backward
-cmp_deeply([&localtime(3655691999)], [59, 59, 1, 4, 10, 2085, 0, 307, 1]);
-cmp_deeply([&localtime(3655692000)], [0, 0, 1, 4, 10, 2085, 0, 307, 0]);
-cmp_deeply([&localtime(3655695599)], [59, 59, 1, 4, 10, 2085, 0, 307, 0]);
-cmp_deeply([&localtime(3655695600)], [0, 0, 2, 4, 10, 2085, 0, 307, 0]);
+cmp_deeply([&localtime(3655691999)], [59, 59, 1, 4, 10, 2085, 0, 307, 1]) if is64bit();
+cmp_deeply([&localtime(3655692000)], [0, 0, 1, 4, 10, 2085, 0, 307, 0]) if is64bit();
+cmp_deeply([&localtime(3655695599)], [59, 59, 1, 4, 10, 2085, 0, 307, 0]) if is64bit();
+cmp_deeply([&localtime(3655695600)], [0, 0, 2, 4, 10, 2085, 0, 307, 0]) if is64bit();
 
 # future dynamic rules for southern hemisphere
 tzset('Australia/Melbourne');
 # jump backward
-cmp_deeply([&localtime(2563977599)], [59, 59, 2, 2, 3, 2051, 0, 91, 1]);
-cmp_deeply([&localtime(2563977600)], [0, 0, 2, 2, 3, 2051, 0, 91, 0]);
-cmp_deeply([&localtime(2563981199)], [59, 59, 2, 2, 3, 2051, 0, 91, 0]);
-cmp_deeply([&localtime(2563981200)], [0, 0, 3, 2, 3, 2051, 0, 91, 0]);
+cmp_deeply([&localtime(2563977599)], [59, 59, 2, 2, 3, 2051, 0, 91, 1]) if is64bit();
+cmp_deeply([&localtime(2563977600)], [0, 0, 2, 2, 3, 2051, 0, 91, 0]) if is64bit();
+cmp_deeply([&localtime(2563981199)], [59, 59, 2, 2, 3, 2051, 0, 91, 0]) if is64bit();
+cmp_deeply([&localtime(2563981200)], [0, 0, 3, 2, 3, 2051, 0, 91, 0]) if is64bit();
 # jump forward
-cmp_deeply([&localtime(2579702399)], [59, 59, 1, 1, 9, 2051, 0, 273, 0]);
-cmp_deeply([&localtime(2579702400)], [0, 0, 3, 1, 9, 2051, 0, 273, 1]);
+cmp_deeply([&localtime(2579702399)], [59, 59, 1, 1, 9, 2051, 0, 273, 0]) if is64bit();
+cmp_deeply([&localtime(2579702400)], [0, 0, 3, 1, 9, 2051, 0, 273, 1]) if is64bit();
 
 # check virtual zones
 tzset('GMT-9');

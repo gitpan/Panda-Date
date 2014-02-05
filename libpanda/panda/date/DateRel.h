@@ -58,10 +58,10 @@ public:
     
     ptime_t duration () const { return toSec(); }
 
-    void set (const DateRel*);
-    void set (const dt*, const dt*);
-    int  set (const char* str, size_t len = 0);
-    void set (ptime_t year, ptime_t mon=0, ptime_t day=0, ptime_t hour=0, ptime_t min=0, ptime_t sec=0);
+    void  set (const DateRel*);
+    void  set (const dt*, const dt*);
+    err_t set (const char* str, size_t len = 0);
+    void  set (ptime_t year, ptime_t mon=0, ptime_t day=0, ptime_t hour=0, ptime_t min=0, ptime_t sec=0);
     
     const char* toString () const;
     
@@ -133,11 +133,11 @@ inline void DateRel::set (const DateRel* source) {
     _year  = source->_year;
 }
 
-inline int DateRel::set (const char* str, size_t len) {
+inline err_t DateRel::set (const char* str, size_t len) {
     _PDR_CHKCONST;
     datetime date;
-    int error = parse_relative(str, len, &date);
-    if (error) return error;
+    err_t error = parse_relative(str, len, &date);
+    if (error != E_OK) return error;
     _year  = date.year;
     _month = date.mon;
     _day   = date.mday;

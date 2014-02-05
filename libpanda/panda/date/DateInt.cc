@@ -4,15 +4,15 @@
 
 namespace panda { namespace date {
 
-int DateInt::set (const char* str, size_t len) {
+err_t DateInt::set (const char* str, size_t len) {
     if (len < 1) len = strlen(str);
-    char* ptr = (char*) str;
-    char* from_str = strsep(&ptr, "~");
-    if (ptr == NULL || ptr >= str + len - 1) return E_UNPARSABLE;
-    int error1 = _from.set(from_str, strlen(from_str));
-    int error2 = _till.set(ptr+1, strlen(ptr)-1);
-    if (error1) return error1;
-    else if (error2) return error2;
+    const char* delim = strchr(str, '~');
+    if (delim == NULL || delim >= str + len - 2) return E_UNPARSABLE;
+    err_t error1 = _from.set(str, delim - str);
+    const char* till_starts = delim + 2;
+    err_t error2 = _till.set(till_starts, str + len - till_starts);
+    if (error1 != E_OK) return error1;
+    else if (error2 != E_OK) return error2;
     return E_OK;
 }
 

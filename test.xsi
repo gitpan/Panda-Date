@@ -2,6 +2,8 @@ MODULE = Panda::Date                PACKAGE = Panda::Time
 PROTOTYPES: DISABLE
 #///////////////////////////// STATIC FUNCTIONS ///////////////////////////////////
 
+#ifdef TEST_FULL
+
 #ifdef TEST_INLINE
 #define GMTIME(a,b)    igmtime(a,b)
 #define TIMEGM(a)      itimegm(a)
@@ -18,18 +20,15 @@ PROTOTYPES: DISABLE
 #define TIMELOCALL(a)  timelocall(a)
 #endif
 
-int
-test_my (ptime_t sec, ptime_t min, ptime_t hour, ptime_t mday, ptime_t mon, int32_t year)
+void
+bench_my (const char* str)
+PPCODE:
+    XSRETURN_UNDEF;
+
+HVR
+test_my (const char* str)
 CODE:
-    datetime date;
-    date.sec = sec;
-    date.min = min;
-    date.hour = hour;
-    date.mday = mday;
-    date.mon = mon;
-    date.year = year;
-    ptime_t epoch = TIMELOCAL(&date);
-    RETVAL=1;
+    RETVAL = newHV();
 OUTPUT:
     RETVAL
     
@@ -320,10 +319,4 @@ CODE:
 OUTPUT:
     RETVAL
 
-
-void
-dump_zones ()
-PPCODE:
-    panda::time::dump_zones();
-    
-    
+#endif

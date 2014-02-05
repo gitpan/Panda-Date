@@ -5,7 +5,7 @@ use Panda::Time;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '2.1';
+our $VERSION = '2.2.0';
 
 =head1 NAME
 
@@ -43,7 +43,7 @@ use overload
 Panda::Date is almost fully compatible with L<Class::Date>, but has several more features and much greater perfomance.
 It is written fully in C/C++.
 
-Panda::Date supports dates between -2147483648/01/01 00:00:00 and 2147483647/12/31 23:59:59.
+Panda::Date supports dates between -2147483648/01/01 00:00:00 and 2147483647/12/31 23:59:59 (on 64bit perls).
 
 With Panda::Date you can perform some operations even faster than in plain C program using stdlibc functions.
 See L<Panda::Time> why.

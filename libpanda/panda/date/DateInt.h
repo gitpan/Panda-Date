@@ -23,11 +23,11 @@ public:
     DateInt  (const char* str, size_t len = 0);
     ~DateInt ();
     
-    void set (ptime_t, ptime_t);
-    void set (const Date*, const Date*);
-    int  set (const char* str, size_t len = 0);
+    void  set (ptime_t, ptime_t);
+    void  set (const Date*, const Date*);
+    err_t set (const char* str, size_t len = 0);
 
-    bool error () const;
+    err_t error () const;
     
     Date* from ();
     Date* till ();
@@ -77,7 +77,7 @@ inline void DateInt::set (const Date* from, const Date* till) {
     _till.set(till);
 }
 
-inline bool DateInt::error () const { return _from.error() || _till.error(); }
+inline err_t DateInt::error () const { return _from.error() == E_OK ? _till.error() : _from.error(); }
 
 inline Date* DateInt::from () { return &_from; }
 inline Date* DateInt::till () { return &_till; }
@@ -120,11 +120,11 @@ inline DateInt* DateInt::subtract (const DateRel* operand) {
 }
 
 inline DateInt* DateInt::negative () {
-    ::std::swap(_from, _till); // slower
-    //char tmp[sizeof(_from)];
-    //memcpy(tmp, &_from, sizeof(_from));
-    //memcpy(&_from, &_till, sizeof(_from));
-    //memcpy(&_till, tmp, sizeof(_from));
+    //::std::swap(_from, _till); // slower
+    char tmp[sizeof(_from)];
+    memcpy(tmp, &_from, sizeof(_from));
+    memcpy(&_from, &_till, sizeof(_from));
+    memcpy(&_till, tmp, sizeof(_from));
     return this;
 }
 

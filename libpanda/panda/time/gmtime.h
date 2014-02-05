@@ -1,5 +1,7 @@
 #pragma once
 
+namespace panda { namespace time {
+
 void gmtime (ptime_t epoch, dt* result);
 
 #ifdef __GNUC__
@@ -28,3 +30,5 @@ inline void igmtime (ptime_t epoch, dt* result) {
     result->isdst = 0;
     result->year = year;
 }
+
+};};

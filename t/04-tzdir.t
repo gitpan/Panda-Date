@@ -9,8 +9,9 @@ my $now = time();
 tzset('Europe/Moscow');
 is(tzname(), 'Europe/Moscow');
 my $date1 = &localtime($now);
+isnt($date1, undef);
+isnt($date1, '');
 my @date1 = lt2tl(&localtime($now));
-say join(',', @date1);
 tzset('America/New_York');
 is(tzname(), 'America/New_York');
 my $date2 = &localtime($now);
@@ -36,11 +37,11 @@ is(&timelocal(@date2), $now);
 
 tzset('Australia/Melbourne'); # no such timezone in t/testzones, should be using UTC
 isnt(tzname(), 'Australia/Melbourne');
-ok(scalar(&localtime($now)) ne $date3);
-ok(&timelocal(@date3) != $now);
+isnt(scalar(&localtime($now)), $date3);
+isnt(&timelocal(@date3), $now);
 tzset('Melbourne');
 isnt(tzname(), 'Melbourne');
-ok(scalar(&localtime($now)) ne $date3);
-ok(&timelocal(@date3) != $now);
+isnt(scalar(&localtime($now)), $date3);
+isnt(&timelocal(@date3), $now);
 
 done_testing();

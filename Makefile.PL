@@ -1,9 +1,6 @@
 use 5.012;
 require 'libpanda/build.pl';
 
-my %supported_os = map {$_ => 1} qw# freebsd linux darwin #;
-die "Unsupported OS: $^O (supported: ".join(', ', keys %supported_os).')' unless $supported_os{$^O};
-
 write_makefile(
     NAME               => 'Panda::Date',
     VERSION_FROM       => 'lib/Panda/Time.pm',
@@ -13,6 +10,6 @@ write_makefile(
     CONFIGURE_REQUIRES => {'File::ShareDir::Install' => '0.07'},
     MYEXTLIB           => ['libpanda/panda/time', 'libpanda/panda/date'],
     INSTALL_SHARE      => 'share',
-    #DEFINE             => '-DTEST_INLINE'
+    #DEFINE             => '-DTEST_FULL -DTEST_INLINE'
     #OPTIMIZE           => '-g',
 );

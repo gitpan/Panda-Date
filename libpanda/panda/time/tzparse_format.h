@@ -3,7 +3,7 @@
 #undef PTIME_TZPARSE_TRANSTIME_TYPE
 #undef PTIME_TZPARSE_LEAPSEC_TYPE
 #undef PTIME_TZPARSE_LEAPSEC_SIZE
-#undef PTIME_TZPARSE_NTOHL
+#undef PTIME_TZPARSE_NTOH_DYN
 
 #ifdef PTIME_TZPARSE_V2
 #  define PTIME_TZPARSE_HEADERFUNC     tzparse_headerV2
@@ -11,19 +11,19 @@
 #  define PTIME_TZPARSE_TRANSTIME_TYPE ftz_transtimeV2
 #  define PTIME_TZPARSE_LEAPSEC_TYPE   ftz_leapsecV2
 #  define PTIME_TZPARSE_LEAPSEC_SIZE   ftz_leapsecV2_size
-#  define PTIME_TZPARSE_NTOHL(val)     be64toh(val)
+#  define PTIME_TZPARSE_NTOH_DYN(val)  ((int64_t)PTIME_BE64TOH(val))
 #else
 #  define PTIME_TZPARSE_HEADERFUNC     tzparse_headerV1
 #  define PTIME_TZPARSE_BODYFUNC       tzparse_bodyV1
 #  define PTIME_TZPARSE_TRANSTIME_TYPE ftz_transtimeV1
 #  define PTIME_TZPARSE_LEAPSEC_TYPE   ftz_leapsecV1
 #  define PTIME_TZPARSE_LEAPSEC_SIZE   ftz_leapsecV1_size
-#  define PTIME_TZPARSE_NTOHL(val)     ((int32_t)be32toh(val))
+#  define PTIME_TZPARSE_NTOH_DYN(val)  ((int32_t)PTIME_BE32TOH(val))
 #endif
 
 #ifndef PTIME_TZPARSE_TRANSCMP
 # define PTIME_TZPARSE_TRANSCMP
-int trans_cmp (const void* _a, const void* _b) {
+static int trans_cmp (const void* _a, const void* _b) {
     tztrans* a = (tztrans*) _a;
     tztrans* b = (tztrans*) _b;
     if (a->start < b->start) return -1;
@@ -32,7 +32,7 @@ int trans_cmp (const void* _a, const void* _b) {
 }
 #endif
 
-inline int PTIME_TZPARSE_HEADERFUNC (char** ptr, ftz_head& head, int* version) {
+static inline int PTIME_TZPARSE_HEADERFUNC (char** ptr, ftz_head& head, int* version) {
     memcpy(&head, *ptr, 44);
     *ptr += 44;
     
@@ -46,12 +46,12 @@ inline int PTIME_TZPARSE_HEADERFUNC (char** ptr, ftz_head& head, int* version) {
     tzh_version_str[1] = '\0';
     *version = (int) strtol(tzh_version_str, NULL, 10);
     
-    head.tzh_ttisgmtcnt = ntohl(head.tzh_ttisgmtcnt);
-    head.tzh_ttisstdcnt = ntohl(head.tzh_ttisstdcnt);
-    head.tzh_leapcnt    = ntohl(head.tzh_leapcnt);
-    head.tzh_timecnt    = ntohl(head.tzh_timecnt);
-    head.tzh_typecnt    = ntohl(head.tzh_typecnt);
-    head.tzh_charcnt    = ntohl(head.tzh_charcnt);
+    head.tzh_ttisgmtcnt = PTIME_BE32TOH(head.tzh_ttisgmtcnt);
+    head.tzh_ttisstdcnt = PTIME_BE32TOH(head.tzh_ttisstdcnt);
+    head.tzh_leapcnt    = PTIME_BE32TOH(head.tzh_leapcnt);
+    head.tzh_timecnt    = PTIME_BE32TOH(head.tzh_timecnt);
+    head.tzh_typecnt    = PTIME_BE32TOH(head.tzh_typecnt);
+    head.tzh_charcnt    = PTIME_BE32TOH(head.tzh_charcnt);
     
     if (head.tzh_timecnt > FTZ_MAX_TIMES) {
         //fprintf(stderr, "ptime: tzh_timecnt %d is greater than max supported %d\n", head.tzh_timecnt, FTZ_MAX_TIMES);
@@ -84,7 +84,7 @@ inline int PTIME_TZPARSE_HEADERFUNC (char** ptr, ftz_head& head, int* version) {
     return to_skip;
 }
 
-inline bool PTIME_TZPARSE_BODYFUNC (char* ptr, ftz_head& head, tz* zone) {
+static inline bool PTIME_TZPARSE_BODYFUNC (char* ptr, ftz_head& head, tz* zone) {
     PTIME_TZPARSE_TRANSTIME_TYPE* transitions = (PTIME_TZPARSE_TRANSTIME_TYPE*) ptr;
     ptr += head.tzh_timecnt * sizeof(PTIME_TZPARSE_TRANSTIME_TYPE);
 
@@ -94,7 +94,7 @@ inline bool PTIME_TZPARSE_BODYFUNC (char* ptr, ftz_head& head, tz* zone) {
     ftz_localtype localtypes[FTZ_MAX_TYPES];
     for (int i = 0; i < head.tzh_typecnt; i++) {
         memcpy(&localtypes[i], ptr, ftz_localtype_size);
-        localtypes[i].offset = ntohl(localtypes[i].offset);
+        localtypes[i].offset = PTIME_BE32TOH(localtypes[i].offset);
         ptr += ftz_localtype_size;
     }
 
@@ -102,13 +102,14 @@ inline bool PTIME_TZPARSE_BODYFUNC (char* ptr, ftz_head& head, tz* zone) {
     ptr += head.tzh_charcnt * sizeof(char);
 
     zone->leaps_cnt = head.tzh_leapcnt;
-    zone->leaps = zone->leaps_cnt > 0 ? (tzleap*) malloc(zone->leaps_cnt * sizeof(tzleap)) : NULL;
+    //zone->leaps = zone->leaps_cnt > 0 ? (tzleap*) malloc(zone->leaps_cnt * sizeof(tzleap)) : NULL;
+    zone->leaps = zone->leaps_cnt > 0 ? new tzleap[zone->leaps_cnt] : NULL;
     for (int i = 0; i < head.tzh_leapcnt; i++) {
         PTIME_TZPARSE_LEAPSEC_TYPE leapsec;
         bzero(&leapsec, sizeof(leapsec));
         memcpy(&leapsec, ptr, PTIME_TZPARSE_LEAPSEC_SIZE);
-        zone->leaps[i].time       = (ptime_t) PTIME_TZPARSE_NTOHL(leapsec.time);
-        zone->leaps[i].correction = ntohl(leapsec.correction);
+        zone->leaps[i].time       = (ptime_t) PTIME_TZPARSE_NTOH_DYN(leapsec.time);
+        zone->leaps[i].correction = PTIME_BE32TOH(leapsec.correction);
         ptr += PTIME_TZPARSE_LEAPSEC_SIZE;
     }
 
@@ -134,7 +135,8 @@ inline bool PTIME_TZPARSE_BODYFUNC (char* ptr, ftz_head& head, tz* zone) {
     
     zone->trans_cnt = head.tzh_timecnt + 1 + zone->leaps_cnt; // +1 for 'past'
     size_t trans_size = zone->trans_cnt * sizeof(tztrans);
-    zone->trans = (tztrans*) malloc(trans_size);
+    //zone->trans = (tztrans*) malloc(trans_size);
+    zone->trans = new tztrans[trans_size];
     bzero(zone->trans, trans_size);
     
     zone->trans[0].start       = EPOCH_NEGINF;
@@ -160,7 +162,7 @@ inline bool PTIME_TZPARSE_BODYFUNC (char* ptr, ftz_head& head, tz* zone) {
     for (int i = 0; i < head.tzh_timecnt; ++i) {
         ftz_localtype localtype = localtypes[ilocaltypes[i]];
         tztrans* this_trans     = &zone->trans[i+1];
-        this_trans->start       = (ptime_t) PTIME_TZPARSE_NTOHL(transitions[i]);
+        this_trans->start       = (ptime_t) PTIME_TZPARSE_NTOH_DYN(transitions[i]);
         this_trans->gmt_offset  = localtype.offset;
         this_trans->isdst       = localtype.isdst;
         char* abbrev            = abbrevs + localtype.abbrev_offset;
@@ -226,17 +228,18 @@ inline bool PTIME_TZPARSE_BODYFUNC (char* ptr, ftz_head& head, tz* zone) {
         zone->future.outer.isdst      = zone->ltrans.isdst;
         strcpy(zone->future.outer.abbrev, zone->ltrans.abbrev);
     }
-    else if (!tzparse_rule(posixstr, zone->future)) {
+    else if (!tzparse_rule(posixstr, &zone->future)) {
         //fprintf(stderr, "ptime: tzparse_rule failed\n");
         tzfree(zone);
         return false;
     }
 
     zone->future.outer.offset = zone->future.outer.gmt_offset - zone->ltrans.leap_corr;
-    zone->future.inner.offset = zone->future.inner.gmt_offset - zone->ltrans.leap_corr;
-    zone->future.delta        = zone->future.inner.offset - zone->future.outer.offset;
-    zone->future.max_offset   = std::max(zone->future.outer.offset, zone->future.inner.offset);
+    if (zone->future.hasdst) {
+        zone->future.inner.offset = zone->future.inner.gmt_offset - zone->ltrans.leap_corr;
+        zone->future.delta        = zone->future.inner.offset - zone->future.outer.offset;
+        zone->future.max_offset   = std::max(zone->future.outer.offset, zone->future.inner.offset);
+    }
     
     return true;
 }
-

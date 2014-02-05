@@ -28,7 +28,7 @@ inline char* itoa (int64_t i) {
 
 inline uint64_t string_hash (const char* str, size_t len) {
     const uint64_t seed = 7;
-    const uint64_t m = 0xc6a4a7935bd1e995L;
+    const uint64_t m = 0xc6a4a7935bd1e995LLU;
     const int r = 47;
 
     const uint64_t * data = (const uint64_t *) str;

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace panda { namespace time {
+
 ptime_t timegml (dt* date);
 ptime_t timegm  (dt* date);
 
@@ -27,3 +29,5 @@ inline ptime_t itimegm (dt* date) {
     igmtime(result, date);
     return result;
 }
+
+};};

@@ -1,16 +1,13 @@
 #include <map>
-#include "time.h"
 #include "../util.h"
-#include <vector>
+#include "time.h"
+#include "tzparse.h"
 
 using panda::util::string_hash;
 
 namespace panda { namespace time {
 
 typedef std::map<uint64_t, tz*> Zones;
-
-typedef std::vector<tz*> _vzone;
-static  _vzone _dbgzones;
 
 static Zones _tzcache;
 static tz*   _localzone = NULL;
@@ -70,22 +67,17 @@ const char* tzsysdir () {
     return PTIME_ZONEDIR;
 }
 
-static int lastid = 0;
-
-tz* _tzget (const char* zonename) {
+static tz* _tzget (const char* zonename) {
     //printf("ptime: tzget for zone %s\n", zonename);
-    tz* zone = (tz*) malloc(sizeof(tz));
+    //tz* zone = (tz*) malloc(sizeof(tz));
+	tz* zone = new tz();
     assert(zone != NULL);
     zone->refcnt = 1;
     zone->is_local = false;
-    zone->id = ++lastid;
-    
-    //_dbgzones.push_back(zone);
-    //tzcapture(zone);
     
     if (zonename == NULL || zonename[0] == '\0') {
         char lzname[TZNAME_MAX+1];
-        _tz_lzname(lzname);
+        tz_lzname(lzname);
         zonename = lzname;
         zone->is_local = true;
     }
@@ -140,16 +132,16 @@ tz* _tzget (const char* zonename) {
     return zone;
 }
 
-void _virtual_fallback (tz* zone) {
+static void _virtual_fallback (tz* zone) {
     //fprintf(stderr, "ptime: fallback to '%s'\n", PTIME_GMT_FALLBACK);
     assert(_virtual_zone(PTIME_GMT_FALLBACK, zone) == true);
     strcpy(zone->name, PTIME_GMT_FALLBACK);
     zone->is_local = false;
 }
 
-bool _virtual_zone (const char* zonename, tz* zone) {
+static bool _virtual_zone (const char* zonename, tz* zone) {
     //printf("ptime: virtual zone %s\n", zonename);
-    if (!tzparse_rule(zonename, zone->future)) return false;
+    if (!tzparse_rule(zonename, &zone->future)) return false;
     zone->future.outer.offset = zone->future.outer.gmt_offset;
     zone->future.inner.offset = zone->future.inner.gmt_offset;
     zone->future.delta        = zone->future.inner.offset - zone->future.outer.offset;
@@ -173,17 +165,10 @@ bool _virtual_zone (const char* zonename, tz* zone) {
     return true;
 }
 
-void _tzcache_clear () {
+static void _tzcache_clear () {
     Zones::iterator it;
     for (it = _tzcache.begin(); it != _tzcache.end(); it++) tzfree(it->second);
     _tzcache.clear();
-}
-
-void dump_zones () {
-    printf("----------------- REPORT ----------------\n");
-    for (_vzone::iterator it = _dbgzones.begin(); it != _dbgzones.end(); it++) {
-        printf("    ZONE #%d rcnt=%02lu name=%s%s\n", (*it)->id, (*it)->refcnt-1, (*it)->name, (*it)->is_local ? " (local)" : "");
-    }
 }
 
 };};

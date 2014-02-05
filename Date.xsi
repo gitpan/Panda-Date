@@ -257,7 +257,7 @@ OUTPUT:
 bool
 Date::to_bool (...)
 CODE:
-    RETVAL = THIS->error() ? false : true;
+    RETVAL = THIS->error() == E_OK ? true : false;
 OUTPUT:
     RETVAL
 
@@ -265,7 +265,7 @@ OUTPUT:
 ptime_t
 Date::to_number (...)
 CODE:
-    RETVAL = THIS->error() ? 0 : THIS->epoch();
+    RETVAL = THIS->error() == E_OK ? THIS->epoch() : 0;
 OUTPUT:
     RETVAL
 
@@ -572,7 +572,7 @@ OUTPUT:
 uint8_t
 Date::error ()
 CODE:
-    RETVAL = THIS->error();
+    RETVAL = (uint8_t) THIS->error();
 OUTPUT:
     RETVAL
 

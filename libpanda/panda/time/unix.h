@@ -61,15 +61,14 @@ bool _from_etc_default_init (char* lzname) {
     return _from_regex(lzname, "/etc/default/init", &pattern, 1);
 }
 
-void _tz_lzname (char* lzname) {
+bool _tz_lzname (char* lzname) {
     if (
-        _from_env(lzname, "TZ")               ||
         _from_etc_localtime(lzname)           ||
         _from_usr_local_etc_localtime(lzname) ||
         _from_etc_timezone(lzname)            ||
         _from_etc_TIMEZONE(lzname)            ||
         _from_etc_sysconfig_clock(lzname)     ||
         _from_etc_default_init(lzname)
-    ) return;
-    strcpy(lzname, PTIME_GMT_FALLBACK);
+    ) return true;
+    return false;
 }

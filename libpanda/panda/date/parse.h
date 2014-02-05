@@ -5,9 +5,9 @@
 
 namespace panda { namespace date {
 
-int  parse_iso           (const char*, size_t, panda::time::datetime*);
-int  parse_relative      (const char*, size_t, panda::time::datetime*);
-bool looks_like_relative (const char*);
+err_t parse_iso           (const char*, size_t, panda::time::datetime*);
+err_t parse_relative      (const char*, size_t, panda::time::datetime*);
+bool  looks_like_relative (const char*);
 
 };};
 

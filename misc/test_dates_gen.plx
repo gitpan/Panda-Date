@@ -3,7 +3,7 @@ use 5.012;
 use lib 'blib/lib', 'blib/arch';
 use POSIX qw/ceil/;
 use Data::Dumper qw/Dumper/;
-use Panda::Date qw/systimelocal timelocal/;
+use Panda::Time qw/systimelocal timelocal tzset/;
 
 unlink glob 't/data/*.txt';
 
@@ -27,7 +27,7 @@ while (my $line = <$genlist_fh>) {
     foreach my $tz (@zones) {
         $ENV{TZ} = $tz;
         POSIX::tzset();
-        Panda::Date::tzset();
+        tzset();
         
         my $from = get_epoch($from_str);
         my $till = get_epoch($till_str);
@@ -39,7 +39,7 @@ while (my $line = <$genlist_fh>) {
             for (my $time = $from; $time <= $till; $time += $step) {
                 my @date = localtime($time);
                 $date[5] += 1900;
-                push @$list, [$time, \@date];
+                push @$list, ["$time", \@date];
             }
         } else {
             $cnt = -$step;
@@ -48,7 +48,7 @@ while (my $line = <$genlist_fh>) {
                 my $time = int rand($range);
                 my @date = localtime($time);
                 $date[5] += 1900;
-                push @$list, [$time, \@date];
+                push @$list, ["$time", \@date];
             }
         }
     }

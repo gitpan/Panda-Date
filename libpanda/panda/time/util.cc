@@ -3,7 +3,7 @@
 namespace panda { namespace time {
 
 char* readfile (const char* path) {
-    FILE* fh = fopen(path, "r");
+    FILE* fh = fopen(path, "rb");
     if (fh == NULL) return NULL;
     
     if (fseek(fh, 0, SEEK_END) != 0) {

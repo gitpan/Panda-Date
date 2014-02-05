@@ -10,7 +10,7 @@ const int _P_STATE_HOUR  = 3;
 const int _P_STATE_MIN   = 4;
 const int _P_STATE_SEC   = 5;
 
-int parse_iso (const char* str, size_t len, datetime* date) {
+err_t parse_iso (const char* str, size_t len, datetime* date) {
     if (len < 1) len = strlen(str);
     int state = _P_STATE_YEAR;
     int32_t curval = 0;
@@ -64,7 +64,7 @@ int parse_iso (const char* str, size_t len, datetime* date) {
     return E_OK;
 }
 
-int parse_relative (const char* str, size_t len, datetime* date) {
+err_t parse_relative (const char* str, size_t len, datetime* date) {
     if (len < 1) len = strlen(str);
     memset(date, 0, sizeof(datetime)); // reset all values
     ptime_t curval = 0;

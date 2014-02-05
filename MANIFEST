@@ -4,7 +4,6 @@ Date.xs
 Date.xsi
 DateInt.xsi
 DateRel.xsi
-doctest.plx
 lib/Panda/Date.pm
 lib/Panda/Date/Int.pm
 lib/Panda/Date/Rel.pm
@@ -61,7 +60,10 @@ libpanda/panda/util/util.h
 libpanda/svn-ignore.txt
 Makefile.PL
 MANIFEST			This list of files
-mytest.plx
+misc/doctest.plx
+misc/mytest.plx
+misc/test_dates_gen.plx
+misc/win32_translist_gen.plx
 share/zoneinfo/Africa/Abidjan
 share/zoneinfo/Africa/Accra
 share/zoneinfo/Africa/Addis_Ababa
@@ -1813,7 +1815,8 @@ sv2class.h
 t/00-Panda-Date.t
 t/01-available_zones.t
 t/02-tzget.t
-t/03-tzdir.t
+t/03-tzset.t
+t/04-tzdir.t
 t/10-gmtime.t
 t/11-timegm.t
 t/12-localtime.t
@@ -1866,7 +1869,6 @@ t/lib/PDTest.pm
 t/testzones/Moscow
 t/testzones/New_York
 test.xsi
-test_dates_gen.plx
 time.xsi
 typemap
 util.cc

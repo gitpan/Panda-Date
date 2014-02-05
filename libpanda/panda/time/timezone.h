@@ -1,12 +1,10 @@
 #pragma once
 
-#include "tzfile.h"
+namespace panda { namespace time {
 
-const int TZSWITCH_DATE = 0;
-const int TZSWITCH_JDAY = 1;
-const int TZSWITCH_DAY  = 2;
+const int TZNAME_MAX = 255; // max length of timezone name or POSIX rule (Europe/Moscow, ...)
 
-const int TZNAME_MAX = 255; /* max length of timezone name or POSIX rule (Europe/Moscow, ...) */
+enum tzswitch_t { TZSWITCH_DATE, TZSWITCH_JDAY, TZSWITCH_DAY };
 
 struct tztrans {
     ptime_t start;        // time of transition
@@ -38,10 +36,11 @@ struct tzrulezone {
         char    abbrev[ZONE_ABBR_MAX+1]; // zone abbreviation
         int64_t n_abbrev;                // abbrev as int64_t
     };
-    int32_t offset;                     // offset from non-leap GMT
-    int32_t gmt_offset;                 // offset from leap GMT
-    int32_t isdst;                      // true if zone represents DST time
-    dt      end;                        // dynamic date when this zone ends (only if hasdst=1)
+    int32_t    offset;                     // offset from non-leap GMT
+    int32_t    gmt_offset;                 // offset from leap GMT
+    int32_t    isdst;                      // true if zone represents DST time
+    tzswitch_t type;                       // type of 'end' field
+    dt         end;                        // dynamic date when this zone ends (only if hasdst=1)
 };
 
 struct tzrule {
@@ -67,10 +66,7 @@ struct tz {
     int32_t  leaps_cnt;
     tzrule   future;
     bool     is_local;
-    int      id;
 };
-
-#include "tzparse.h"
 
 void tzset   (const char* zonename = NULL);
 tz*  tzget   (const char*);
@@ -80,18 +76,16 @@ const char* tzdir    ();
 bool        tzdir    (const char*);
 const char* tzsysdir ();
 
-#include "../perl.h"
-
 inline void tzcapture (tz* zone) {
     zone->refcnt++;
 }
 
 inline void tzfree (tz* zone) {
     if (--zone->refcnt <= 0) {
-        free(zone->trans);
-        if (zone->leaps_cnt > 0) free(zone->leaps);
-        free(zone);
+        delete[] zone->trans;
+        if (zone->leaps_cnt > 0) delete[] zone->leaps;
+        delete zone;
     }
 }
 
-void dump_zones ();
+};};

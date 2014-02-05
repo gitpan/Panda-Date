@@ -11,9 +11,7 @@ namespace panda { namespace date {
 using panda::time::dt;
 using panda::time::ptime_t;
 
-const int E_OK         = 0;
-const int E_UNPARSABLE = 1;
-const int E_RANGE      = 2;
+enum err_t {E_OK = 0, E_UNPARSABLE, E_RANGE};
 
 inline static int epoch_cmp (ptime_t a, ptime_t b) {
     return a > b ? 1 : (a == b ? 0 : -1);

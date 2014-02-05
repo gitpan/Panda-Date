@@ -1,4 +1,7 @@
 #pragma once
 
-void _tz_lzname (char*);
-bool _from_env  (char*, const char*);
+namespace panda { namespace time {
+
+void tz_lzname (char*);
+
+};};

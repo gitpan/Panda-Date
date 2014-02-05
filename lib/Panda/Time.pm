@@ -3,7 +3,7 @@ use parent 'Panda::Export';
 use 5.012;
 use File::ShareDir();
 
-our $VERSION = '2.1';
+our $VERSION = '2.2.0';
 
 require XSLoader;
 XSLoader::load('Panda::Date', $VERSION);
@@ -97,7 +97,7 @@ Does NOT affect POSIX:tzset(). Only this module's localtime/timelocal/etc functi
     # change local zone to 'America/New_York'
     tzset('America/New_York');
     
-    # the same
+    # the same (doesnt work in Windows)
     local $ENV{TZ} = 'America/New_York';
     tzset();
     
@@ -164,7 +164,7 @@ Example of data returned:
 =head4 use_system_zones()
 
 Use your OS's timezones dir. This is default behaviour if your OS has /usr/share/zoneinfo DB. Otherwise embedded zones
-are used by default.
+are used by default (on MS Windows).
 
 If your OS doesn't have /usr/share/zoneinfo DB, this function warns and does nothing.
 
@@ -219,9 +219,9 @@ Same as timelocal() except for the arguments which have to be non-constant value
 
 =head1 SUPPORTED OS
 
-Tested on FreeBSD, Linux, MacOSX. I believe all of UNIX-like systems are supported.
+Tested on FreeBSD, Linux, MacOSX, Windows 2003, Windows 7.
 
-Windows is NOT supported at the moment.
+I believe all of UNIX-like and Windows-like systems are supported.
 
 Timezones are supported in Olson DB format (V1,2,3).
 
@@ -354,6 +354,12 @@ Behaves like POSIX's C<strftime()>.
 Performs struct tm <-> struct datetime convertations
 
 =head1 CAVEATS
+
+C<$ENV{TZ}> doesn't work in Windows. To set $zone as localzone, you should write
+
+	tzset($zone);
+
+to produce platform-independent code.
 
 While developing all the time functions from scratch and comparing results with POSIX's system functions i discovered
 that many operating systems have buggy implementations of localtime/timelocal functions which causes them to return

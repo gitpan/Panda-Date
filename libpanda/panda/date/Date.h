@@ -35,7 +35,10 @@ private:
     void eCheck ();
     void dCheck ();
     
-    int validateRange();
+    err_t validateRange();
+    void  dChg();
+    void  dChgAuto();
+    void  eChg();
 
     void _zone_set (tz* zone);
 
@@ -57,12 +60,12 @@ public:
     
     Date& operator= (const Date&);
 
-    void set (ptime_t, tz* = NULL);
-    int  set (const char* str, size_t len = 0, tz* zone = NULL);
-    int  set (int32_t, ptime_t, ptime_t, ptime_t, ptime_t, ptime_t, int isdst = -1, tz* zone = NULL);
-    void set (const Date*, tz* zone = NULL);
+    void  set (ptime_t, tz* = NULL);
+    err_t set (const char* str, size_t len = 0, tz* zone = NULL);
+    err_t set (int32_t, ptime_t, ptime_t, ptime_t, ptime_t, ptime_t, int isdst = -1, tz* zone = NULL);
+    void  set (const Date*, tz* zone = NULL);
     
-    int change (int32_t year, ptime_t mon=-1, ptime_t day=-1, ptime_t hour=-1, ptime_t min=-1, ptime_t sec=-1, int isdst=-1, tz* zone=NULL);
+    err_t change (int32_t year, ptime_t mon=-1, ptime_t day=-1, ptime_t hour=-1, ptime_t min=-1, ptime_t sec=-1, int isdst=-1, tz* zone=NULL);
 
     ptime_t epoch ();
     void    epoch (ptime_t);
@@ -71,8 +74,8 @@ public:
     bool      hasEpoch   () const;
     bool      hasDate    () const;
     bool      normalized () const;
-    uint8_t   error      () const;
-    void      error      (uint8_t);
+    err_t     error      () const;
+    void      error      (err_t);
     tz*       timezone   () const;
     void      timezone   (tz*);
     void      toTimezone (tz*);
@@ -155,6 +158,21 @@ public:
     const char* ampm     ();
 };
 
+inline void Date::dChg() {
+    _hasEpoch = false;
+    _normalized = false;
+}
+
+inline void Date::dChgAuto() {
+    dChg();
+    _date.isdst = -1;
+}
+
+inline void Date::eChg() {
+    _hasDate = false;
+    _normalized = false;
+}
+
 inline Date::Date (const Date& source) : _zone(NULL) {
     set(&source);
 }
@@ -180,17 +198,16 @@ inline void Date::set (ptime_t val, tz* zone) {
     epoch(val);
 }
 
-inline int Date::set (const char* str, size_t len, tz* zone) {
+inline err_t Date::set (const char* str, size_t len, tz* zone) {
     _zone_set(zone);
-    _error      = parse_iso(str, len, &_date);
-    _hasEpoch   = false;
-    _hasDate    = true;
-    _normalized = false;
-    if (_rangeCheck && !_error) validateRange();
-    return _error;
+    _error   = parse_iso(str, len, &_date);
+    _hasDate = true;
+    dChgAuto();
+    if (_rangeCheck && _error == E_OK) validateRange();
+    return (err_t) _error;
 }
 
-inline int Date::set (int32_t year, ptime_t month, ptime_t day, ptime_t hour, ptime_t min, ptime_t sec, int isdst, tz* zone) {
+inline err_t Date::set (int32_t year, ptime_t month, ptime_t day, ptime_t hour, ptime_t min, ptime_t sec, int isdst, tz* zone) {
     _zone_set(zone);
     _error      = E_OK;
     _date.year  = year;
@@ -200,11 +217,10 @@ inline int Date::set (int32_t year, ptime_t month, ptime_t day, ptime_t hour, pt
     _date.min   = min;
     _date.sec   = sec;
     _date.isdst = isdst;
-    _hasEpoch   = false;
     _hasDate    = true;
-    _normalized = false;
+    dChg();
     if (_rangeCheck) validateRange();
-    return _error;
+    return (err_t) _error;
 }
 
 inline void Date::set (const Date* source, tz* zone) {
@@ -229,7 +245,7 @@ inline void Date::set (const Date* source, tz* zone) {
     tzcapture(_zone);
 }
 
-inline int Date::change (int32_t year, ptime_t mon, ptime_t day, ptime_t hour, ptime_t min, ptime_t sec, int isdst, tz* zone) {
+inline err_t Date::change (int32_t year, ptime_t mon, ptime_t day, ptime_t hour, ptime_t min, ptime_t sec, int isdst, tz* zone) {
     dCheck();
     _error = E_OK;
     if (year >= 0) _date.year = year;
@@ -239,11 +255,10 @@ inline int Date::change (int32_t year, ptime_t mon, ptime_t day, ptime_t hour, p
     if (min  >= 0) _date.min  = min;
     if (sec  >= 0) _date.sec  = sec;
     _date.isdst = isdst;
-    _hasEpoch   = false;
-    _normalized = false;
+    dChg();
     _zone_set(zone);
     if (_rangeCheck) validateRange();
-    return _error;
+    return (err_t) _error;
 }
 
 inline void Date::_zone_set (tz* zone) {
@@ -262,67 +277,65 @@ inline void Date::eCheck () { if (!_hasEpoch) eSync(); }
 inline void Date::dCheck () { if (!_hasDate || !_normalized) dSync(); }
 
 inline ptime_t Date::epoch ()            { eCheck(); return _epoch; }
-inline void    Date::epoch (ptime_t val) { _epoch = val; _hasEpoch = true; _hasDate = false; _normalized = false; }
+inline void    Date::epoch (ptime_t val) { _epoch = val; _hasEpoch = true; eChg(); }
 
-inline const dt* Date::date       ()            { dCheck(); return &_date; }
-inline bool      Date::hasEpoch   () const      { return _hasEpoch; }
-inline bool      Date::hasDate    () const      { return _hasDate; }
-inline bool      Date::normalized () const      { return _normalized; }
-inline uint8_t   Date::error      () const      { return _error; }
-inline void      Date::error      (uint8_t val) { _error = val; epoch(0); }
-inline tz*       Date::timezone   () const      { return _zone; }
+inline const dt* Date::date       ()          { dCheck(); return &_date; }
+inline bool      Date::hasEpoch   () const    { return _hasEpoch; }
+inline bool      Date::hasDate    () const    { return _hasDate; }
+inline bool      Date::normalized () const    { return _normalized; }
+inline err_t     Date::error      () const    { return (err_t) _error; }
+inline void      Date::error      (err_t val) { _error = val; epoch(0); }
+inline tz*       Date::timezone   () const    { return _zone; }
 
 inline void Date::timezone (tz* zone) {
     dCheck();
-    _hasEpoch = false;
-    _normalized = false;
     if (zone == NULL) zone = tzlocal();
+    dChgAuto();
     _zone_set(zone);
 }
 
 inline void Date::toTimezone (tz* zone) {
     eCheck();
-    _hasDate = false;
-    _normalized = false;
     if (zone == NULL) zone = tzlocal();
+    eChg();
     _zone_set(zone);
 }
 
 inline int32_t Date::year  ()            { dCheck(); return _date.year; }
-inline void    Date::year  (int32_t val) { dCheck(); _date.year = val; _hasEpoch = false; _normalized = false; }
+inline void    Date::year  (int32_t val) { dCheck(); _date.year = val; dChgAuto(); }
 inline int32_t Date::_year ()            { return year() - 1900; }
 inline void    Date::_year (int32_t val) { year(val + 1900); }
 inline int8_t  Date::yr    ()            { return year() % 100; }
 inline void    Date::yr    (int val)     { year( year() - yr() + val ); }
 
 inline uint8_t Date::month  ()            { dCheck(); return _date.mon + 1; }
-inline void    Date::month  (ptime_t val) { dCheck(); _date.mon = val - 1; _hasEpoch = false; _normalized = false; }
+inline void    Date::month  (ptime_t val) { dCheck(); _date.mon = val - 1; dChgAuto(); }
 inline uint8_t Date::_month ()            { return month() - 1; }
 inline void    Date::_month (ptime_t val) { month(val + 1); }
 
 inline uint8_t Date::mday ()            { dCheck(); return _date.mday; }
-inline void    Date::mday (ptime_t val) { dCheck(); _date.mday = val; _hasEpoch = false; _normalized = false; }
+inline void    Date::mday (ptime_t val) { dCheck(); _date.mday = val; dChgAuto(); }
 inline uint8_t Date::day  ()            { return mday(); }
 inline void    Date::day  (ptime_t val) { mday(val); }
 
 inline uint8_t Date::hour ()            { dCheck(); return _date.hour; }
-inline void    Date::hour (ptime_t val) { dCheck(); _date.hour = val; _hasEpoch = false; _normalized = false; }
+inline void    Date::hour (ptime_t val) { dCheck(); _date.hour = val; dChgAuto(); }
 
 inline uint8_t Date::min ()            { dCheck(); return _date.min; }
-inline void    Date::min (ptime_t val) { dCheck(); _date.min = val; _hasEpoch = false; _normalized = false; }
+inline void    Date::min (ptime_t val) { dCheck(); _date.min = val; dChgAuto(); }
 
 inline uint8_t Date::sec ()            { dCheck(); return _date.sec; }
-inline void    Date::sec (ptime_t val) { dCheck(); _date.sec = val; _hasEpoch = false; _normalized = false; }
+inline void    Date::sec (ptime_t val) { dCheck(); _date.sec = val; dChgAuto(); }
 
 inline uint8_t Date::wday ()             { dCheck(); return _date.wday + 1; }
-inline void    Date::wday (ptime_t val)  { dCheck(); _date.mday += val - (_date.wday + 1); _hasEpoch = false; _normalized = false; }
+inline void    Date::wday (ptime_t val)  { dCheck(); _date.mday += val - (_date.wday + 1); dChgAuto(); }
 inline uint8_t Date::_wday ()            { return wday() - 1; }
 inline void    Date::_wday (ptime_t val) { wday(val + 1); }
 inline uint8_t Date::ewday ()            { dCheck(); return _date.wday == 0 ? 7 : _date.wday; }
-inline void    Date::ewday (ptime_t val) { _date.mday += val - ewday(); _hasEpoch = false; _normalized = false; }
+inline void    Date::ewday (ptime_t val) { _date.mday += val - ewday(); dChgAuto(); }
 
 inline uint16_t Date::yday  ()            { dCheck(); return _date.yday + 1; }
-inline void     Date::yday  (ptime_t val) { dCheck(); _date.mday += val - 1 - _date.yday; _hasEpoch = false; _normalized = false; }
+inline void     Date::yday  (ptime_t val) { dCheck(); _date.mday += val - 1 - _date.yday; dChgAuto(); }
 inline uint16_t Date::_yday ()            { return yday() - 1; }
 inline void     Date::_yday (ptime_t val) { yday(val + 1); }
 
@@ -339,8 +352,7 @@ inline Date* Date::truncate () {
     _date.sec  = 0;
     _date.min  = 0;
     _date.hour = 0;
-    _hasEpoch   = false;
-    _normalized = false;
+    dChgAuto();
     return this;
 }
 

@@ -20,7 +20,7 @@ my @a = 1..100;
 undef @a;
 my $i = 0;
 
-while (++$i < 100000) {
+while (++$i < 10000) {
     tzset('Europe/Moscow');
     tzget('America/New_York');
     #Panda::Time::dump_zones();

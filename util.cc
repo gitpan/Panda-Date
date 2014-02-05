@@ -15,7 +15,7 @@
 namespace panda { namespace xsdate {
 
 void date_freeze (Date* date, char* buf) {
-    *((ptime_t*) buf) = htobe64(date->epoch());
+    *((ptime_t*) buf) = PTIME_HTOBE64(date->epoch());
     buf += sizeof(ptime_t);
     
     if (date->timezone()->is_local) *buf = '\0';
@@ -24,7 +24,7 @@ void date_freeze (Date* date, char* buf) {
 
 const char* date_thaw (ptime_t* epoch, tz** zone, const char* ptr, size_t len) {
     if (len < sizeof(ptime_t)) croak("Panda::Date: cannot 'thaw' - corrupted data");
-    *epoch = be64toh(*((ptime_t*) ptr));
+    *epoch = PTIME_BE64TOH(*((ptime_t*) ptr));
     ptr += sizeof(ptime_t);
     if (*ptr == '\0') {
         *zone = NULL;

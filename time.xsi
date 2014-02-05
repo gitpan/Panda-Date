@@ -2,6 +2,12 @@ MODULE = Panda::Date                PACKAGE = Panda::Time
 PROTOTYPES: DISABLE
 #///////////////////////////// STATIC FUNCTIONS ///////////////////////////////////
 
+#ifdef _WIN32
+#  define LT_FORMAT "%a %b %d %H:%M:%S %Y"
+#else
+#  define LT_FORMAT "%a %b %e %H:%M:%S %Y"
+#endif
+
 void
 tzset (SV* newzone = NULL)
 PPCODE:
@@ -58,10 +64,10 @@ PPCODE:
         XSRETURN(9);
     } else {
         EXTEND(SP, 1);
-        SV* ret = newSV(50);
+        SV* ret = newSV(1000);
         SvPOK_on(ret);
         char* str = SvPVX(ret);
-        size_t strlen = strftime(str, 50, "%a %b %e %H:%M:%S %Y", &date);
+        size_t strlen = strftime(str, 1000, LT_FORMAT, &date);
         SvCUR_set(ret, strlen);
         mPUSHs(ret);
         XSRETURN(1);
@@ -127,8 +133,8 @@ CODE:
     date.tm_mon   = mon;
     date.tm_year  = year;
     date.tm_isdst = isdst;
-    if (ix == 0) RETVAL = timegm(&date);
-    else RETVAL = timelocal(&date);
+    if (ix == 0) RETVAL = SYSTIMEGM(&date);
+    else RETVAL = SYSTIMELOCAL(&date);
 OUTPUT:
     RETVAL
 

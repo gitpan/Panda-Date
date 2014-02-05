@@ -7,6 +7,7 @@
 #include <string.h>
 #include <string>
 #include <assert.h>
+
 #include "config.h"
 
 namespace panda { namespace time {
@@ -15,7 +16,8 @@ typedef int64_t ptime_t;
 
 const int ZONE_PATH_MAX = 1000; // max length of custom zone dir / custom local zone path
 
-const int ZONE_ABBR_MAX = 7;  /* max length of local type abbrev name (MSK, EST, EDT, ...) */
+const int ZONE_ABBR_MAX = 7; /* max length of local type abbrev name (MSK, EST, EDT, ...) */
+const int ZONE_ABBR_MIN = 3;
 static const int64_t ZONE_N_GMT = *((int64_t*) PTIME_GMT_ZONE);
 
 const ptime_t EPOCH_NEGINF = -9223372036854775807LL - 1;
@@ -78,6 +80,8 @@ struct datetime {
 };
 typedef datetime dt;
 
+};};
+
 #include "util.h"
 #include "gmtime.h"
 #include "timegm.h"
@@ -86,5 +90,3 @@ typedef datetime dt;
 #include "localtime.h"
 #include "timelocal.h"
 #include "osdep.h"
-
-};};

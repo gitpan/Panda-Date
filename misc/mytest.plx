@@ -9,9 +9,7 @@ use Panda::Time qw/tzget tzset/;
 use Class::Date;
 use Data::Dumper qw/Dumper/;
 use Storable qw/freeze nfreeze thaw dclone/;
-use JSON::XS;
 say "START";
-use Class::Date;
 
 tzset();
 POSIX::tzset();
@@ -35,6 +33,7 @@ POSIX::tzset();
 *posix_localtime_bench = *Panda::Time::posix_localtime_bench;
 *posix_timegm_bench = *Panda::Time::posix_timegm_bench;
 *posix_timelocal_bench = *Panda::Time::posix_timelocal_bench;
+*bmy = *Panda::Time::bench_my;
 
 my $tz = $ENV{TZ};
 my $zone = tzget($tz);

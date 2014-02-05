@@ -7,6 +7,14 @@
 #include <panda/time.h>
 #include <panda/date.h>
 
+#ifdef _WIN32
+#  define SYSTIMEGM(x)    _mkgmtime(x)
+#  define SYSTIMELOCAL(x) mktime(x)
+#else
+#  define SYSTIMEGM(x)    timegm(x)
+#  define SYSTIMELOCAL(x) timelocal(x)
+#endif
+
 namespace panda { namespace xsdate {
 
 using namespace panda::time;

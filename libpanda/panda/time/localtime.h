@@ -1,14 +1,16 @@
 #pragma once
 
+namespace panda { namespace time {
+
 void localtime (ptime_t, dt*);
 void anytime   (ptime_t, dt*, const tz*);
-
-inline ptime_t _calc_rule_epoch (int, const dt*, dt);
 
 #ifdef __GNUC__
 inline void ianytime   (ptime_t epoch, dt* result, const tz* zone) __attribute__((always_inline));        
 inline void ilocaltime (ptime_t epoch, dt* result)                 __attribute__((always_inline));
 #endif 
+
+inline ptime_t _calc_rule_epoch (int, const dt*, dt);
 
 #define __PTIME_TRANS_BINFIND(VAR, FIELD) \
     int index = -1; \
@@ -70,3 +72,5 @@ inline ptime_t _calc_rule_epoch (int is_leap, const dt* curdate, dt border) {
     border.year = curdate->year;
     return itimegmll(&border);
 }
+
+};};

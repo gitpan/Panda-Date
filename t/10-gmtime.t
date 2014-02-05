@@ -12,6 +12,10 @@ foreach my $file (map {"utc$_"} 1,2,3,4,5,6,7) {
 }
 
 # check scalar context
-is(scalar &gmtime(1387727619), 'Sun Dec 22 15:53:39 2013');
+if ($^O eq 'MSWin32') {
+    like(scalar &gmtime(1387727619), qr/^\S+ \S+ 22 15:53:39 2013$/);
+} else {
+    is(scalar &gmtime(1387727619), 'Sun Dec 22 15:53:39 2013');
+}
 
 done_testing();

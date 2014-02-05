@@ -1,5 +1,7 @@
 #pragma once
 
+namespace panda { namespace time {
+
 char* readfile (const char*);
 
 inline int64_t char8_to_int64 (const char* source) {
@@ -89,3 +91,5 @@ inline void tm2dt (dt &to, struct tm &from) {
 inline int days_in_month (int32_t year, uint8_t month) {
     return DAYS_IN_MONTH[is_leap_year(year)][month];
 }
+
+};};

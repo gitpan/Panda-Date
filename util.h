@@ -13,8 +13,8 @@ void        date_freeze (Date* date, char* buf);
 const char* date_thaw   (ptime_t* epoch, tz** zone, const char* ptr, size_t len);
 
 inline size_t date_freeze_len (Date* date) {
-    if (date->timezone()->is_local) return sizeof(time_t);
-    return sizeof(time_t) + strlen(date->timezone()->name);
+    if (date->timezone()->is_local) return sizeof(ptime_t);
+    return sizeof(ptime_t) + strlen(date->timezone()->name);
 }
 
 DateRel* daterel_new (SV* arg, DateRel* operand=NULL);

@@ -43,7 +43,6 @@ namespace panda { namespace date {
 
 void Date::eSync () { // w/o date normalization
     _hasEpoch = true;
-    _date.isdst = -1;
     _epoch = itimeanyl(&_date, _zone);
 }
 
@@ -58,7 +57,7 @@ void Date::dSync () {
     }
 }
 
-int Date::validateRange () {
+err_t Date::validateRange () {
     datetime old = _date;
     dSync();
     
@@ -85,8 +84,7 @@ Date* Date::add (const DateRel* operand) {
     _date.mday += operand->day();
     _date.mon  += operand->month();
     _date.year += operand->year();
-    _hasEpoch = false;
-    _normalized = false;
+    dChgAuto();
     return this;
 }
 
@@ -98,8 +96,7 @@ Date* Date::subtract (const DateRel* operand) {
     _date.mday -= operand->day();
     _date.mon  -= operand->month();
     _date.year -= operand->year();
-    _hasEpoch = false;
-    _normalized = false;
+    dChgAuto();
     return this;
 }
 
