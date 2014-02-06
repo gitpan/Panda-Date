@@ -1,3 +1,5 @@
+2.4      07.02.2014
+           - fix building on some platforms
 2.3      06.02.2014
            - Fix bug with ($date - $number). Returned interval, now returns date
            - Better support for perl-32bit-int (now supported dates range is [-2**53, 2**53] instead of [-2**31, 2**31-1])

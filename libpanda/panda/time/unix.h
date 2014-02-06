@@ -1,5 +1,5 @@
 #pragma once
-
+#include <unistd.h>
 #include <regex.h>
 
 bool _from_etc_localtime (char* lzname) {

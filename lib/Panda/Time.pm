@@ -3,7 +3,7 @@ use parent 'Panda::Export';
 use 5.012;
 use File::ShareDir();
 
-our $VERSION = '2.3';
+our $VERSION = '2.4';
 
 require XSLoader;
 XSLoader::load('Panda::Date', $VERSION);
