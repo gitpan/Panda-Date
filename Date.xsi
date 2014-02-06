@@ -86,7 +86,7 @@ PPCODE:
 ptime_t
 Date::epoch (SV* newval = NULL)
 CODE:
-    if (newval) THIS->epoch(SvIV(newval));
+    if (newval) THIS->epoch(SvMIV(newval));
     RETVAL = THIS->epoch();
 OUTPUT:
     RETVAL
@@ -95,7 +95,7 @@ OUTPUT:
 int32_t
 Date::year (SV* newval = NULL)
 CODE:
-    if (newval) THIS->year(SvIV(newval));
+    if (newval) THIS->year(SvMIV(newval));
     RETVAL = THIS->year();
 OUTPUT:
     RETVAL
@@ -104,7 +104,7 @@ OUTPUT:
 int32_t
 Date::_year (SV* newval = NULL)
 CODE:
-    if (newval) THIS->_year(SvIV(newval));
+    if (newval) THIS->_year(SvMIV(newval));
     RETVAL = THIS->_year();
 OUTPUT:
     RETVAL
@@ -113,7 +113,7 @@ OUTPUT:
 int8_t
 Date::yr (SV* newval = NULL)
 CODE:
-    if (newval) THIS->yr(SvIV(newval));
+    if (newval) THIS->yr(SvMIV(newval));
     RETVAL = THIS->yr();
 OUTPUT:
     RETVAL
@@ -124,7 +124,7 @@ Date::month (SV* newval = NULL)
 ALIAS:
     mon = 1
 CODE:
-    if (newval) THIS->month(SvIV(newval));
+    if (newval) THIS->month(SvMIV(newval));
     RETVAL = THIS->month();
 OUTPUT:
     RETVAL
@@ -135,7 +135,7 @@ Date::_month (SV* newval = NULL)
 ALIAS:
     _mon = 1
 CODE:
-    if (newval) THIS->_month(SvIV(newval));
+    if (newval) THIS->_month(SvMIV(newval));
     RETVAL = THIS->_month();
 OUTPUT:
     RETVAL
@@ -147,7 +147,7 @@ ALIAS:
     mday = 1
     day_of_month = 2
 CODE:
-    if (newval) THIS->day(SvIV(newval));
+    if (newval) THIS->day(SvMIV(newval));
     RETVAL = THIS->day();
 OUTPUT:
     RETVAL
@@ -156,7 +156,7 @@ OUTPUT:
 uint8_t
 Date::hour (SV* newval = NULL)
 CODE:
-    if (newval) THIS->hour(SvIV(newval));
+    if (newval) THIS->hour(SvMIV(newval));
     RETVAL = THIS->hour();
 OUTPUT:
     RETVAL
@@ -167,7 +167,7 @@ Date::min (SV* newval = NULL)
 ALIAS:
     minute = 1
 CODE:
-    if (newval) THIS->min(SvIV(newval));
+    if (newval) THIS->min(SvMIV(newval));
     RETVAL = THIS->min();
 OUTPUT:
     RETVAL
@@ -178,7 +178,7 @@ Date::sec (SV* newval = NULL)
 ALIAS:
     second = 1
 CODE:
-    if (newval) THIS->sec(SvIV(newval));
+    if (newval) THIS->sec(SvMIV(newval));
     RETVAL = THIS->sec();
 OUTPUT:
     RETVAL
@@ -189,7 +189,7 @@ Date::wday (SV* newval = NULL)
 ALIAS:
     day_of_week = 1
 CODE:
-    if (newval) THIS->wday(SvUV(newval));
+    if (newval) THIS->wday(SvMUV(newval));
     RETVAL = THIS->wday();
 OUTPUT:
     RETVAL
@@ -198,7 +198,7 @@ OUTPUT:
 uint8_t
 Date::_wday (SV* newval = NULL)
 CODE:
-    if (newval) THIS->_wday(SvUV(newval));
+    if (newval) THIS->_wday(SvMUV(newval));
     RETVAL = THIS->_wday();
 OUTPUT:
     RETVAL
@@ -207,7 +207,7 @@ OUTPUT:
 uint8_t
 Date::ewday (SV* newval = NULL)
 CODE:
-    if (newval) THIS->ewday(SvUV(newval));
+    if (newval) THIS->ewday(SvMUV(newval));
     RETVAL = THIS->ewday();
 OUTPUT:
     RETVAL
@@ -218,7 +218,7 @@ Date::yday (SV* newval = NULL)
 ALIAS:
     day_of_year = 1
 CODE:
-    if (newval) THIS->yday(SvUV(newval));
+    if (newval) THIS->yday(SvMUV(newval));
     RETVAL = THIS->yday();
 OUTPUT:
     RETVAL
@@ -227,7 +227,7 @@ OUTPUT:
 uint16_t
 Date::_yday (SV* newval = NULL)
 CODE:
-    if (newval) THIS->_yday(SvUV(newval));
+    if (newval) THIS->_yday(SvMUV(newval));
     RETVAL = THIS->_yday();
 OUTPUT:
     RETVAL
@@ -660,7 +660,7 @@ PPCODE:
 
 
 Date*
-Date::subtract_new (SV* arg, bool reverse)
+Date::subtract_new (SV* arg, bool reverse = false)
 CODE:
     const char* CLASS;
     //static Date opDate((ptime_t) 0);
@@ -683,6 +683,12 @@ CODE:
         Date opDate((ptime_t) 0);
         date_set(arg, THIS->timezone(), &opDate);
         RETVAL = (Date*) new DateInt(THIS, &opDate);
+    }
+    else if (looks_like_number(arg)) {
+        CLASS = DATE_CLASS;
+        ptime_t new_epoch = THIS->epoch() - SvMIV(arg);
+        RETVAL = THIS->clone();
+        RETVAL->epoch(new_epoch);
     }
     else { // date or rdate scalar
         const char* argstr = SvPV_nolen(arg);

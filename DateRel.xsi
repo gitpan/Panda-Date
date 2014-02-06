@@ -55,7 +55,7 @@ ALIAS:
 CODE:
     if (newval) {
         daterel_chkro(THIS);
-        THIS->sec(SvIV(newval));
+        THIS->sec(SvMIV(newval));
     }
     RETVAL = THIS->sec();
 OUTPUT:
@@ -71,7 +71,7 @@ ALIAS:
 CODE:
     if (newval) {
         daterel_chkro(THIS);
-        THIS->min(SvIV(newval));
+        THIS->min(SvMIV(newval));
     }
     RETVAL = THIS->min();
 OUTPUT:
@@ -85,7 +85,7 @@ ALIAS:
 CODE:
     if (newval) {
         daterel_chkro(THIS);
-        THIS->hour(SvIV(newval));
+        THIS->hour(SvMIV(newval));
     }
     RETVAL = THIS->hour();
 OUTPUT:
@@ -99,7 +99,7 @@ ALIAS:
 CODE:
     if (newval) {
         daterel_chkro(THIS);
-        THIS->day(SvIV(newval));
+        THIS->day(SvMIV(newval));
     }
     RETVAL = THIS->day();
 OUTPUT:
@@ -115,7 +115,7 @@ ALIAS:
 CODE:
     if (newval) {
         daterel_chkro(THIS);
-        THIS->month(SvIV(newval));
+        THIS->month(SvMIV(newval));
     }
     RETVAL = THIS->month();
 OUTPUT:
@@ -129,7 +129,7 @@ ALIAS:
 CODE:
     if (newval) {
         daterel_chkro(THIS);
-        THIS->year(SvIV(newval));
+        THIS->year(SvMIV(newval));
     }
     RETVAL = THIS->year();
 OUTPUT:

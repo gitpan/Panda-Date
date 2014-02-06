@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "parse.h"
 using namespace panda::time;
 
@@ -119,8 +120,9 @@ const unsigned char relchars[256] = {
 
 bool looks_like_relative (const char* str) {
     unsigned char c;
-    for (; (c = *str) != '\0'; str++) if (relchars[c]) return true;
-    return false;
+    const char* p = str;
+    for (; (c = *p) != '\0'; p++) if (relchars[c]) return true;
+    return p == str;
 }
 
 };};

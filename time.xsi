@@ -42,7 +42,7 @@ ALIAS:
     localtime = 1
 PPCODE:
     ptime_t epoch;
-    if (epochSV) epoch = (ptime_t) SvIV(epochSV);
+    if (epochSV) epoch = (ptime_t) SvMIV(epochSV);
     else epoch = (ptime_t) time(NULL);
     
     datetime date;
@@ -82,12 +82,12 @@ ALIAS:
     timelocaln = 3
 CODE:
     datetime date;
-    date.sec  = SvIV(sec);
-    date.min  = SvIV(min);
-    date.hour = SvIV(hour);
-    date.mday = SvIV(mday);
-    date.mon  = SvIV(mon);
-    date.year = SvIV(year);
+    date.sec  = SvMIV(sec);
+    date.min  = SvMIV(min);
+    date.hour = SvMIV(hour);
+    date.mday = SvMIV(mday);
+    date.mon  = SvMIV(mon);
+    date.year = SvMIV(year);
     
     if (isdst) date.isdst = SvIV(isdst);
     else date.isdst = -1;

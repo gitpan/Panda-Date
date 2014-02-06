@@ -55,19 +55,19 @@ Date* SV2C_DATE_FUNC (SV* arg, tz* zone, Date* operand) {
                     HV* hash = (HV*) rarg;
                     
                     ref = hv_fetch(hash, "year", 4, 0);
-                    if (ref != NULL) vals[0] = SvIV(*ref);
+                    if (ref != NULL) vals[0] = SvMIV(*ref);
                     ref = hv_fetch(hash, "month", 5, 0);
-                    if (ref != NULL) vals[1] = SvIV(*ref);
+                    if (ref != NULL) vals[1] = SvMIV(*ref);
                     ref = hv_fetch(hash, "day", 3, 0);
-                    if (ref != NULL) vals[2] = SvIV(*ref);
+                    if (ref != NULL) vals[2] = SvMIV(*ref);
                     ref = hv_fetch(hash, "hour", 4, 0);
-                    if (ref != NULL) vals[3] = SvIV(*ref);
+                    if (ref != NULL) vals[3] = SvMIV(*ref);
                     ref = hv_fetch(hash, "min", 3, 0);
-                    if (ref != NULL) vals[4] = SvIV(*ref);
+                    if (ref != NULL) vals[4] = SvMIV(*ref);
                     ref = hv_fetch(hash, "sec", 3, 0);
-                    if (ref != NULL) vals[5] = SvIV(*ref);
+                    if (ref != NULL) vals[5] = SvMIV(*ref);
                     ref = hv_fetch(hash, "isdst", 5, 0);
-                    if (ref != NULL) vals[6] = SvIV(*ref);
+                    if (ref != NULL) vals[6] = SvMIV(*ref);
                     
                     if (zone == NULL) {
                         ref = hv_fetch(hash, "tz", 2, 0);
@@ -79,7 +79,7 @@ Date* SV2C_DATE_FUNC (SV* arg, tz* zone, Date* operand) {
                     I32 len = av_len(array);
                     for (int i = 0; i <= len; i++) {
                         ref = av_fetch(array, i, 0);
-                        if (ref != NULL && SvOK(*ref)) vals[i] = SvIV(*ref);
+                        if (ref != NULL && SvOK(*ref)) vals[i] = SvMIV(*ref);
                     }
                 } else {
                     SV2C_TYPE_CROAK;
@@ -91,7 +91,7 @@ Date* SV2C_DATE_FUNC (SV* arg, tz* zone, Date* operand) {
         }
 #ifndef SV2C_CLONE
         else if (looks_like_number(arg)) {
-            epoch = SvIV(arg);
+            epoch = SvMIV(arg);
         }
         else {
             STRLEN len;
@@ -131,24 +131,24 @@ DateRel* SV2C_DATEREL_FUNC (SV* arg, DateRel* operand) {
             if (SvTYPE(rarg) == SVt_PVHV) {
                 HV* hash = (HV*) rarg;
                 ref = hv_fetch(hash, "year", 4, 0);
-                if (ref != NULL) vals[0] = SvIV(*ref);
+                if (ref != NULL) vals[0] = SvMIV(*ref);
                 ref = hv_fetch(hash, "month", 5, 0);
-                if (ref != NULL) vals[1] = SvIV(*ref);
+                if (ref != NULL) vals[1] = SvMIV(*ref);
                 ref = hv_fetch(hash, "day", 3, 0);
-                if (ref != NULL) vals[2] = SvIV(*ref);
+                if (ref != NULL) vals[2] = SvMIV(*ref);
                 ref = hv_fetch(hash, "hour", 4, 0);
-                if (ref != NULL) vals[3] = SvIV(*ref);
+                if (ref != NULL) vals[3] = SvMIV(*ref);
                 ref = hv_fetch(hash, "min", 3, 0);
-                if (ref != NULL) vals[4] = SvIV(*ref);
+                if (ref != NULL) vals[4] = SvMIV(*ref);
                 ref = hv_fetch(hash, "sec", 3, 0);
-                if (ref != NULL) vals[5] = SvIV(*ref);
+                if (ref != NULL) vals[5] = SvMIV(*ref);
             }
             else if (SvTYPE(rarg) == SVt_PVAV) {
                 AV* array = (AV*) rarg;
                 I32 len = av_len(array);
                 for (int i = 0; i <= len; i++) {
                     ref = av_fetch(array, i, 0);
-                    if (ref != NULL) vals[i] = SvIV(*ref);
+                    if (ref != NULL) vals[i] = SvMIV(*ref);
                 }
             }
             else {
@@ -160,7 +160,7 @@ DateRel* SV2C_DATEREL_FUNC (SV* arg, DateRel* operand) {
         }
     }
     else if (looks_like_number(arg)) {
-        SV2C_DATEREL_ACTION(0, 0, 0, 0, 0, SvIV(arg));
+        SV2C_DATEREL_ACTION(0, 0, 0, 0, 0, SvMIV(arg));
         return operand;
     }
     else {

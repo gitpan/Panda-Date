@@ -1,4 +1,5 @@
 use 5.012;
+use Config;
 use ExtUtils::MakeMaker;
 use File::ShareDir::Install;
 
@@ -86,6 +87,8 @@ sub write_makefile {
     $params{INC} .= ' -Ilibpanda ';
 
     $params{TYPEMAPS} ||= [];
+	if ($Config{ivsize} >= 8) { push @{$params{TYPEMAPS}}, 'libpanda/panda/perl/perlobject64.map' }
+	else { push @{$params{TYPEMAPS}}, 'libpanda/panda/perl/perlobject32.map' }
     push @{$params{TYPEMAPS}}, 'libpanda/panda/perl/perlobject.map';
     
     $postamble->{install_share} = delete $params{INSTALL_SHARE};

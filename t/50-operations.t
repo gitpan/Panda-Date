@@ -96,6 +96,8 @@ ok(!eval { my $a = $date - idate(111,111); 1; }); # $date $idate
 $date = date("2012-03-02 15:47:32");
 $date -= "1M";
 is($date, "2012-02-02 15:47:32");
+is($date+1, "2012-02-02 15:47:33");
+is($date-1, "2012-02-02 15:47:31");
 # $scalar $date
 $scalar = "2013-04-03 16:48:33";
 $scalar -= $date;

@@ -24,13 +24,13 @@ if ($^O eq 'MSWin32') {
 }
 
 # check past
-cmp_deeply([&localtime(-2940149821)], [19, 13, 14, 30, 9, 1876, 1, 303, 0]) if is64bit();
+cmp_deeply([&localtime(-2940149821)], [19, 13, 14, 30, 9, 1876, 1, 303, 0]);
 # check past before first transition
-cmp_deeply([&localtime(-2840149821)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]) if is64bit();
+cmp_deeply([&localtime(-2840149821)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]);
 # first transition
-cmp_deeply([&localtime(-2840149820)], [40, 59, 23, 31, 11, 1879, 3, 364, 0]) if is64bit();
-cmp_deeply([&localtime(-2840149801)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]) if is64bit();
-cmp_deeply([&localtime(-2840149800)], [0, 0, 0, 1, 0, 1880, 4, 0, 0]) if is64bit();
+cmp_deeply([&localtime(-2840149820)], [40, 59, 23, 31, 11, 1879, 3, 364, 0]);
+cmp_deeply([&localtime(-2840149801)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]);
+cmp_deeply([&localtime(-2840149800)], [0, 0, 0, 1, 0, 1880, 4, 0, 0]);
 
 # transition jump forward
 cmp_deeply([&localtime(1206831599)], [59, 59, 1, 30, 2, 2008, 0, 89, 0]);
@@ -49,24 +49,24 @@ cmp_deeply([&localtime(1401180400)], [40, 46, 12, 27, 4, 2014, 2, 146, 0]);
 # future dynamic rules for northern hemisphere
 tzset('America/New_York');
 # jump forward
-cmp_deeply([&localtime(3635132399)], [59, 59, 1, 11, 2, 2085, 0, 69, 0]) if is64bit();
-cmp_deeply([&localtime(3635132400)], [0, 0, 3, 11, 2, 2085, 0, 69, 1]) if is64bit();
+cmp_deeply([&localtime(3635132399)], [59, 59, 1, 11, 2, 2085, 0, 69, 0]);
+cmp_deeply([&localtime(3635132400)], [0, 0, 3, 11, 2, 2085, 0, 69, 1]);
 # jump backward
-cmp_deeply([&localtime(3655691999)], [59, 59, 1, 4, 10, 2085, 0, 307, 1]) if is64bit();
-cmp_deeply([&localtime(3655692000)], [0, 0, 1, 4, 10, 2085, 0, 307, 0]) if is64bit();
-cmp_deeply([&localtime(3655695599)], [59, 59, 1, 4, 10, 2085, 0, 307, 0]) if is64bit();
-cmp_deeply([&localtime(3655695600)], [0, 0, 2, 4, 10, 2085, 0, 307, 0]) if is64bit();
+cmp_deeply([&localtime(3655691999)], [59, 59, 1, 4, 10, 2085, 0, 307, 1]);
+cmp_deeply([&localtime(3655692000)], [0, 0, 1, 4, 10, 2085, 0, 307, 0]);
+cmp_deeply([&localtime(3655695599)], [59, 59, 1, 4, 10, 2085, 0, 307, 0]);
+cmp_deeply([&localtime(3655695600)], [0, 0, 2, 4, 10, 2085, 0, 307, 0]);
 
 # future dynamic rules for southern hemisphere
 tzset('Australia/Melbourne');
 # jump backward
-cmp_deeply([&localtime(2563977599)], [59, 59, 2, 2, 3, 2051, 0, 91, 1]) if is64bit();
-cmp_deeply([&localtime(2563977600)], [0, 0, 2, 2, 3, 2051, 0, 91, 0]) if is64bit();
-cmp_deeply([&localtime(2563981199)], [59, 59, 2, 2, 3, 2051, 0, 91, 0]) if is64bit();
-cmp_deeply([&localtime(2563981200)], [0, 0, 3, 2, 3, 2051, 0, 91, 0]) if is64bit();
+cmp_deeply([&localtime(2563977599)], [59, 59, 2, 2, 3, 2051, 0, 91, 1]);
+cmp_deeply([&localtime(2563977600)], [0, 0, 2, 2, 3, 2051, 0, 91, 0]);
+cmp_deeply([&localtime(2563981199)], [59, 59, 2, 2, 3, 2051, 0, 91, 0]);
+cmp_deeply([&localtime(2563981200)], [0, 0, 3, 2, 3, 2051, 0, 91, 0]);
 # jump forward
-cmp_deeply([&localtime(2579702399)], [59, 59, 1, 1, 9, 2051, 0, 273, 0]) if is64bit();
-cmp_deeply([&localtime(2579702400)], [0, 0, 3, 1, 9, 2051, 0, 273, 1]) if is64bit();
+cmp_deeply([&localtime(2579702399)], [59, 59, 1, 1, 9, 2051, 0, 273, 0]);
+cmp_deeply([&localtime(2579702400)], [0, 0, 3, 1, 9, 2051, 0, 273, 1]);
 
 # check virtual zones
 tzset('GMT-9');

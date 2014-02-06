@@ -1,6 +1,4 @@
-#ifndef xs_pdate_util_h_included
-#define xs_pdate_util_h_included
-
+#pragma once
 #include "Date.h"
 
 namespace panda { namespace xsdate {
@@ -30,5 +28,3 @@ DateInt* dateint_set (SV* from, SV* till, DateInt* operand=NULL);
 HV* export_timezone (const tz* zone);
 
 };};
-
-#endif

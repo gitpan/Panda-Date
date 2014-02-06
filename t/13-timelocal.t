@@ -20,19 +20,19 @@ my ($Y,$M,$D,$h,$m,$s,$isdst);
 
 tzset('Europe/Moscow');
 # check past
-is(timelocal(19, 13, 14, 30, 9, 1876), -2940149821) if is64bit();
+is(timelocal(19, 13, 14, 30, 9, 1876), -2940149821);
 # check past within first transition.
-is(timelocal(40, 59, 23, 31, 11, 1879), -2840149820) if is64bit(); # Auto-dst should always choose later time by default
-is(timelocal(40, 59, 23, 31, 11, 1879, 0), -2840149820) if is64bit(); # force choosing later time
-is(timelocal(59, 59, 23, 31, 11, 1879, 0), -2840149801) if is64bit(); # force choosing later time
-is(timelocal(40, 59, 23, 31, 11, 1879, 1), -2840149840) if is64bit(); # force choosing earlier time
-is(timelocal(59, 59, 23, 31, 11, 1879, 1), -2840149821) if is64bit(); # force choosing earlier time
-is(timelocal(0, 0, 0, 1, 0, 1880), -2840149800) if is64bit(); # no ambiguity
+is(timelocal(40, 59, 23, 31, 11, 1879), -2840149820); # Auto-dst should always choose later time by default
+is(timelocal(40, 59, 23, 31, 11, 1879, 0), -2840149820); # force choosing later time
+is(timelocal(59, 59, 23, 31, 11, 1879, 0), -2840149801); # force choosing later time
+is(timelocal(40, 59, 23, 31, 11, 1879, 1), -2840149840); # force choosing earlier time
+is(timelocal(59, 59, 23, 31, 11, 1879, 1), -2840149821); # force choosing earlier time
+is(timelocal(0, 0, 0, 1, 0, 1880), -2840149800); # no ambiguity
 # check that forcing earlier/later time doesn't matter when no ambiguity
-is(timelocal(19, 13, 14, 30, 9, 1876, 0), -2940149821) if is64bit();
-is(timelocal(19, 13, 14, 30, 9, 1876, 1), -2940149821) if is64bit();
-is(timelocal(0, 0, 0, 1, 0, 1880, 0), -2840149800) if is64bit();
-is(timelocal(0, 0, 0, 1, 0, 1880, 1), -2840149800) if is64bit();
+is(timelocal(19, 13, 14, 30, 9, 1876, 0), -2940149821);
+is(timelocal(19, 13, 14, 30, 9, 1876, 1), -2940149821);
+is(timelocal(0, 0, 0, 1, 0, 1880, 0), -2840149800);
+is(timelocal(0, 0, 0, 1, 0, 1880, 1), -2840149800);
 # transitions
 is(timelocal(0, 20, 4, 21, 10, 2004), 1101000000); # standart time
 is(timelocal(20, 33, 23, 5, 5, 2005), 1118000000); # dst
@@ -74,73 +74,73 @@ is(timelocal(0, 0, 3, 30, 9, 2005, 1), 1130630400); # no ambiguity
 is(timelocal(20, 33, 7, 18, 4, 2033), 2000000000);
 # normalize
 ($isdst,$Y,$M,$D,$h,$m,$s) = (1,2070,-123,-1234,-12345,-123456,133456789);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807081029) if is64bit();
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807081029) if is64bit();
-cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [0,2058,11,14,12,43,49]) if is64bit();
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807081029);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807081029);
+cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [0,2058,11,14,12,43,49]);
 
 # future dynamic rules for northern hemisphere
 tzset('America/New_York');
 # jump forward
-is(timelocal(59, 59, 1, 11, 2, 2085), 3635132399) if is64bit();
-is(timelocal(59, 59, 1, 11, 2, 2085, 1), 3635132399) if is64bit();
+is(timelocal(59, 59, 1, 11, 2, 2085), 3635132399);
+is(timelocal(59, 59, 1, 11, 2, 2085, 1), 3635132399);
 ($isdst,$Y,$M,$D,$h,$m,$s) = (0,2085,2,11,2,0,0);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 3635132400) if is64bit();
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 3635132400) if is64bit();
-cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2085,2,11,3,0,0]) if is64bit();
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 3635132400);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 3635132400);
+cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2085,2,11,3,0,0]);
 ($isdst,$Y,$M,$D,$h,$m,$s) = (0,2085,2,11,2,30,0);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 3635134200) if is64bit();
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 3635134200) if is64bit();
-cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2085,2,11,3,30,0]) if is64bit();
-is(timelocal(0, 0, 3, 11, 2, 2085), 3635132400) if is64bit();
-is(timelocal(0, 0, 3, 11, 2, 2085, 1), 3635132400) if is64bit();
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 3635134200);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 3635134200);
+cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2085,2,11,3,30,0]);
+is(timelocal(0, 0, 3, 11, 2, 2085), 3635132400);
+is(timelocal(0, 0, 3, 11, 2, 2085, 1), 3635132400);
 # jump backward
-is(timelocal(59, 59, 0, 4, 10, 2085), 3655688399) if is64bit();
-is(timelocal(59, 59, 0, 4, 10, 2085, 1), 3655688399) if is64bit();
-is(timelocal(0, 0, 1, 4, 10, 2085), 3655692000) if is64bit(); # later time
-is(timelocal(0, 0, 1, 4, 10, 2085, 0), 3655692000) if is64bit(); # later time
-is(timelocal(0, 0, 1, 4, 10, 2085, -1), 3655692000) if is64bit(); # later time
-is(timelocal(0, 0, 1, 4, 10, 2085, 1), 3655688400) if is64bit(); # earlier time
-is(timelocal(59, 59, 1, 4, 10, 2085), 3655695599) if is64bit(); # later time
-is(timelocal(59, 59, 1, 4, 10, 2085, 1), 3655691999) if is64bit(); # earlier time
-is(timelocal(0, 0, 2, 4, 10, 2085), 3655695600) if is64bit();
-is(timelocal(0, 0, 2, 4, 10, 2085, 1), 3655695600) if is64bit();
+is(timelocal(59, 59, 0, 4, 10, 2085), 3655688399);
+is(timelocal(59, 59, 0, 4, 10, 2085, 1), 3655688399);
+is(timelocal(0, 0, 1, 4, 10, 2085), 3655692000); # later time
+is(timelocal(0, 0, 1, 4, 10, 2085, 0), 3655692000); # later time
+is(timelocal(0, 0, 1, 4, 10, 2085, -1), 3655692000); # later time
+is(timelocal(0, 0, 1, 4, 10, 2085, 1), 3655688400); # earlier time
+is(timelocal(59, 59, 1, 4, 10, 2085), 3655695599); # later time
+is(timelocal(59, 59, 1, 4, 10, 2085, 1), 3655691999); # earlier time
+is(timelocal(0, 0, 2, 4, 10, 2085), 3655695600);
+is(timelocal(0, 0, 2, 4, 10, 2085, 1), 3655695600);
 #normalize
 ($isdst,$Y,$M,$D,$h,$m,$s) = (1,2070,-123,-1234,-12345,-123456,133456789);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807113429) if is64bit();
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807113429) if is64bit();
-cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [0,2058,11,14,12,43,49]) if is64bit();
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807113429);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807113429);
+cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [0,2058,11,14,12,43,49]);
 
 # future dynamic rules for southern hemisphere
 tzset('Australia/Melbourne');
 # jump backward
-is(timelocal(59, 59, 1, 2, 3, 2051), 2563973999) if is64bit();
-is(timelocal(59, 59, 1, 2, 3, 2051, 1), 2563973999) if is64bit();
-is(timelocal(0, 0, 2, 2, 3, 2051), 2563977600) if is64bit(); # later time
-is(timelocal(0, 0, 2, 2, 3, 2051, 0), 2563977600) if is64bit(); # later time
-is(timelocal(0, 0, 2, 2, 3, 2051, -1), 2563977600) if is64bit(); # later time
-is(timelocal(0, 0, 2, 2, 3, 2051, 1), 2563974000) if is64bit(); # earlier time
-is(timelocal(59, 59, 2, 2, 3, 2051), 2563981199) if is64bit(); # later time
-is(timelocal(59, 59, 2, 2, 3, 2051, 1), 2563977599) if is64bit(); # earlier time
-is(timelocal(0, 0, 3, 2, 3, 2051), 2563981200) if is64bit();
-is(timelocal(0, 0, 3, 2, 3, 2051, 1), 2563981200) if is64bit();
+is(timelocal(59, 59, 1, 2, 3, 2051), 2563973999);
+is(timelocal(59, 59, 1, 2, 3, 2051, 1), 2563973999);
+is(timelocal(0, 0, 2, 2, 3, 2051), 2563977600); # later time
+is(timelocal(0, 0, 2, 2, 3, 2051, 0), 2563977600); # later time
+is(timelocal(0, 0, 2, 2, 3, 2051, -1), 2563977600); # later time
+is(timelocal(0, 0, 2, 2, 3, 2051, 1), 2563974000); # earlier time
+is(timelocal(59, 59, 2, 2, 3, 2051), 2563981199); # later time
+is(timelocal(59, 59, 2, 2, 3, 2051, 1), 2563977599); # earlier time
+is(timelocal(0, 0, 3, 2, 3, 2051), 2563981200);
+is(timelocal(0, 0, 3, 2, 3, 2051, 1), 2563981200);
 # jump forward
-is(timelocal(59, 59, 1, 1, 9, 2051), 2579702399) if is64bit();
-is(timelocal(59, 59, 1, 1, 9, 2051, 1), 2579702399) if is64bit();
+is(timelocal(59, 59, 1, 1, 9, 2051), 2579702399);
+is(timelocal(59, 59, 1, 1, 9, 2051, 1), 2579702399);
 ($isdst,$Y,$M,$D,$h,$m,$s) = (0,2051,9,1,2,0,0);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2579702400) if is64bit();
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2579702400) if is64bit();
-cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2051,9,1,3,0,0]) if is64bit();
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2579702400);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2579702400);
+cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2051,9,1,3,0,0]);
 ($isdst,$Y,$M,$D,$h,$m,$s) = (0,2051,9,1,2,30,0);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2579704200) if is64bit();
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2579704200) if is64bit();
-cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2051,9,1,3,30,0]) if is64bit();
-is(timelocal(0, 0, 3, 1, 9, 2051), 2579702400) if is64bit();
-is(timelocal(0, 0, 3, 1, 9, 2051, 1), 2579702400) if is64bit();
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2579704200);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2579704200);
+cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2051,9,1,3,30,0]);
+is(timelocal(0, 0, 3, 1, 9, 2051), 2579702400);
+is(timelocal(0, 0, 3, 1, 9, 2051, 1), 2579702400);
 # normalize
 ($isdst,$Y,$M,$D,$h,$m,$s) = (0,2070,-123,-1234,-12345,-123456,133456789);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807055829) if is64bit();
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807055829) if is64bit();
-cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2058,11,14,12,43,49]) if is64bit();
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807055829);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807055829);
+cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2058,11,14,12,43,49]);
 
 # check virtual zones
 ($Y,$M,$D,$h,$m,$s) = (2014,0,16,17,18,0);

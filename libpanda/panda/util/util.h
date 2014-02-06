@@ -2,6 +2,7 @@
 #define putil_h_included
 
 #include <stdint.h>
+#include <stddef.h>
 
 namespace panda { namespace util {
 

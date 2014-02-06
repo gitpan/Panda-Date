@@ -25,22 +25,7 @@ sub get_dates {
     <$fh>; # skip stat line
     local $/ = undef;
     my $content = <$fh>;
-    my $data = eval $content;
-	
-	if (!is64bit()) { # remove 64bit epochs from test data
-		while (my ($zone, $list) = each %$data) {
-			for (my $i = 0; $i < @$list; $i++) {
-				my $row = $list->[$i];
-				my $epoch_str = $row->[0];
-				my $val = int($epoch_str);
-				next if $val eq $epoch_str and $val >= -2147483648 and $val <= 2147483647;
-				splice(@$list, $i, 1);
-				$i--;
-			}
-		}
-	}
-	
-	return $data;
+    return eval $content;
 }
 
 sub get_row_tl {
@@ -56,7 +41,5 @@ sub epoch_from {
 }
 
 sub leap_zones_dir { return tzdir().'/right' }
-
-sub is64bit { return $Config{ivsize} >= 8 }
 
 1;

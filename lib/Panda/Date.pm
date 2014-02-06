@@ -5,7 +5,7 @@ use Panda::Time;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '2.2.0';
+our $VERSION = '2.2.1';
 
 =head1 NAME
 
@@ -711,6 +711,20 @@ For example:
     $date == $date2; # true, because $date->epoch == $date2->epoch
     say $date;  # 2014-01-01 00:00:00
     say $date2; # 2013-12-31 15:00:00
+
+=head1 DATE RANGES
+
+=head4 64bit OS + perl-64bit-int
+
+from -2147483648/01/01 00:00:00 till 2147483647/12/31 23:59:59
+
+=head4 32bit OS + perl-64bit-int
+
+from -2147483648/01/01 00:00:00 till 2147483647/12/31 23:59:59
+
+=head4 32bit OS + perl-32bit-int
+
+from -285424812/02/20 18:53:48 till 285428751/11/12 11:36:32 
 
 =head1 CAVEATS
 

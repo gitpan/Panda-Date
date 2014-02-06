@@ -216,7 +216,7 @@ CODE:
         else croak("Panda::Date: cannot '<=>' - object isn't a Panda::Date::Int object");
     }
     else if (looks_like_number(arg)) {
-        RETVAL = epoch_cmp(THIS->duration(), SvIV(arg));
+        RETVAL = epoch_cmp(THIS->duration(), SvMIV(arg));
     }
     else {
         //static DateInt acc;

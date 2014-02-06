@@ -1,0 +1,9 @@
+# "perlobject32.map"  Crazy Panda
+
+TYPEMAP
+
+int64_t     T_NV
+uint64_t    T_NV
+
+time_t  T_NV
+ptime_t T_NV

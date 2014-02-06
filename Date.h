@@ -1,5 +1,4 @@
-#ifndef xs_Date_h_included
-#define xs_Date_h_included
+#pragma once
 
 #include <panda/std.h>
 #include <panda/perl.h>
@@ -13,6 +12,14 @@
 #else
 #  define SYSTIMEGM(x)    timegm(x)
 #  define SYSTIMELOCAL(x) timelocal(x)
+#endif
+
+#if IVSIZE >= 8
+#  define SvMIV(x) SvIV(x)
+#  define SvMUV(x) SvUV(x)
+#else
+#  define SvMIV(x) ((int64_t)SvNV(x))
+#  define SvMUV(x) ((uint64_t)SvNV(x))
 #endif
 
 namespace panda { namespace xsdate {
@@ -37,5 +44,3 @@ inline void daterel_chkro (DateRel* THIS) {
 }
 
 };};
-
-#endif
