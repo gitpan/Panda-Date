@@ -24,20 +24,19 @@ if ($^O eq 'MSWin32') {
 }
 
 # check past
-cmp_deeply([&localtime(-2940149821)], [19, 13, 14, 30, 9, 1876, 1, 303, 0]);
+cmp_deeply([&localtime(-2940149821)], [16, 13, 14, 30, 9, 1876, 1, 303, 0]);
 # check past before first transition
-cmp_deeply([&localtime(-2840149821)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]);
+cmp_deeply([&localtime(-1688265018)], [59, 59, 23, 2, 6, 1916, 0, 183, 0]);
 # first transition
-cmp_deeply([&localtime(-2840149820)], [40, 59, 23, 31, 11, 1879, 3, 364, 0]);
-cmp_deeply([&localtime(-2840149801)], [59, 59, 23, 31, 11, 1879, 3, 364, 0]);
-cmp_deeply([&localtime(-2840149800)], [0, 0, 0, 1, 0, 1880, 4, 0, 0]);
+cmp_deeply([&localtime(-1688265017)], [2, 1, 0, 3, 6, 1916, 1, 184, 0]);
+cmp_deeply([&localtime(-1688265016)], [3, 1, 0, 3, 6, 1916, 1, 184, 0]);
 
 # transition jump forward
 cmp_deeply([&localtime(1206831599)], [59, 59, 1, 30, 2, 2008, 0, 89, 0]);
 cmp_deeply([&localtime(1206831600)], [0, 0, 3, 30, 2, 2008, 0, 89, 1]);
 # non-standart jump forward (DST + change zone, 2hrs)
-cmp_deeply([&localtime(-1627965049)], [59, 59, 21, 31, 4, 1918, 5, 150, 0]);
-cmp_deeply([&localtime(-1627965048)], [0, 0, 0, 1, 5, 1918, 6, 151, 1]);
+cmp_deeply([&localtime(-1627965080)], [59, 59, 21, 31, 4, 1918, 5, 150, 0]);
+cmp_deeply([&localtime(-1627965079)], [0, 0, 0, 1, 5, 1918, 6, 151, 1]);
 # transition jump backward
 cmp_deeply([&localtime(1193525999)], [59, 59, 2, 28, 9, 2007, 0, 300, 1]);
 cmp_deeply([&localtime(1193526000)], [0, 0, 2, 28, 9, 2007, 0, 300, 0]);

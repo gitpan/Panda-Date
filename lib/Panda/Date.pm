@@ -5,7 +5,7 @@ use Panda::Time;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '2.4';
+our $VERSION = '2.7';
 
 =head1 NAME
 
@@ -538,6 +538,10 @@ If any values in hash or array are absent (or = undef or = -1) the appropriate f
 
 If $timezone parameter is absent (or undef or ""), newly created date will use $date's timezone.
 Otherwise constructed date is converted to timezone $timezone preserving YMDhms information.
+
+=head4 CLONE()
+
+Hook for Panda::Lib::clone().
 
 =head4 month_begin_new()
 

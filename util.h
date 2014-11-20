@@ -1,14 +1,14 @@
 #pragma once
 #include "Date.h"
 
-namespace panda { namespace xsdate {
+namespace xs { namespace date {
 
-Date* date_new   (SV* arg, tz* zone, Date* operand=NULL);
-Date* date_set   (SV* arg, tz* zone, Date* operand=NULL);
-Date* date_clone (SV* arg, tz* zone, Date* operand=NULL);
+Date* date_new   (SV* arg, const tz* zone, Date* operand=NULL);
+Date* date_set   (SV* arg, const tz* zone, Date* operand=NULL);
+Date* date_clone (SV* arg, const tz* zone, Date* operand=NULL);
 
 void        date_freeze (Date* date, char* buf);
-const char* date_thaw   (ptime_t* epoch, tz** zone, const char* ptr, size_t len);
+const char* date_thaw   (ptime_t* epoch, const tz** zone, const char* ptr, size_t len);
 
 inline size_t date_freeze_len (Date* date) {
     if (date->timezone()->is_local) return sizeof(ptime_t);
@@ -27,4 +27,4 @@ DateInt* dateint_set (SV* from, SV* till, DateInt* operand=NULL);
 
 HV* export_timezone (const tz* zone);
 
-};};
+}}

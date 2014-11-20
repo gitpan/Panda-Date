@@ -1,7 +1,7 @@
 #include "Date.h"
 #include "util.h"
 
-using namespace panda::xsdate;
+using namespace xs::date;
 using namespace panda::time;
 using namespace panda::date;
 

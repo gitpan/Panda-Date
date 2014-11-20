@@ -1,12 +1,13 @@
 package Panda::Time;
 use parent 'Panda::Export';
 use 5.012;
-use File::ShareDir();
+use Panda::Lib;
+use Panda::Install::Payload;
 
-our $VERSION = '2.4';
+our $VERSION = '2.7';
 
-require XSLoader;
-XSLoader::load('Panda::Date', $VERSION);
+require Panda::XSLoader;
+Panda::XSLoader::bootstrap('Panda::Date', $VERSION);
 
 __init__();
 
@@ -29,7 +30,7 @@ sub use_system_zones {
 }
 
 sub use_embed_zones {
-    my $dir = File::ShareDir::dist_dir('Panda-Date');
+    my $dir = Panda::Install::Payload::payload_dir('Panda::Date');
     return tzdir("$dir/zoneinfo");
 }
 
@@ -256,13 +257,13 @@ See L</tzset([$zone])>.
 
 =head4 tz* tzget (const char* zone)
 
-Returns timezone struct pointer which contains info about timezone 'zone' (or about server's local zone if zone == NULL or "").
+Returns timezone object pointer which contains info about timezone 'zone' (or about server's local zone if zone == NULL or "").
 
 You can then use this pointer to perform time calculations in any zone you want without setting local zone via C<tzset()>.
 You can also have as many timezones in parralel as you want.
 
 Remember that this pointer is only valid until next C<tzdir(newdir)> and possibly C<tzset()> call.
-If you want this zone pointer to be valid forever use C<tzcapture()>.
+If you want this zone pointer to be valid forever call C<retain()> on timezone object.
 
 When you call C<tzget(zone)> for the first time it reads and parses timezone file from disk. Futher calls with the same zone
 returns cached pointer.
@@ -283,15 +284,15 @@ See L</tzdir([$newdir])>. C<tzdir(NULL)> sets tzdir to tzsysdir().
 
 Returns system timezones dir if any (usually /usr/share/zoneinfo), otherwise returns NULL.
 
-=head4 void tzcapture (tz* zone)
+=head4 void timezone->retain ()
 
-Captures timezone struct so that it remains valid until C<tzfree(zone)> call.
+Captures timezone object so that it remains valid until C<timezone->release()> call.
 
-=head4 void tzfree (tz* zone)
+=head4 void timezone->release ()
 
-Releases timezone struct so that it can be removed from memory if no longer used by any other consumers.
+Releases timezone object so that it can be removed from memory if no longer used by any other consumers.
 
-Remember: you must not call C<tzfree(zone)> unless you've called C<tzcapture(zone)>.
+Remember: you must not call C<release()> unless you've called C<retain()>.
 
 =head4 void gmtime (time_t epoch, datetime* result)
 
@@ -341,7 +342,7 @@ The following two lines are equivalent:
 
 More efficient (lite) version of C<timeany()>, doesn't change (normalize) values in date.
 
-=head4 igmtime(), itimegm(), itimegml(), ilocaltime(), itimelocal(), itimelocall(), ianytime(), itimeany(), itimeanyl()
+=head4 igmtime(), itimegm(), itimegml()
 
 Inline versions for even more perfomance.
 
@@ -440,16 +441,16 @@ Steps to reproduce: (TZ=Europe/Moscow, date strings are for compactness, actuall
 
 Tests were performed on MacOSX Lion, Core i7 3.2Ghz, clang 3.3.
 
-    --------------------------------------------------------------------------------------------------------------------
-    |         Function        | libpanda(inline) | libpanda(func) |  libc(MacOSX)  |   libc(Linux)  |   libc(FreeBSD)  |
-    --------------------------------------------------------------------------------------------------------------------
-    | gmtime(epoch, &date)    |      65 M/s      |     53 M/s     |     11 M/s     |     15 M/s     |       12 M/s     |
-    | timegm(&date)           |      32 M/s      |     30 M/s     |    0.4 M/s     |     10 M/s     |     0.15 M/s     |
-    | timegml(&date)          |     170 M/s      |    135 M/s     |       --       |       --       |        --        |
-    | localtime(epoch, &date) |      30 M/s      |     26 M/s     |    5.5 M/s     |      7 M/s     |        3 M/s     |
-    | timelocal(&date)        |      27 M/s      |     23 M/s     |    0.5 M/s     |    1.2 M/s     |      0.1 M/s     |
-    | timelocall(&date)       |      70 M/s      |     50 M/s     |       --       |       --       |        --        |
-    --------------------------------------------------------------------------------------------------------------------
+    -------------------------------------------------------------------------------------------------
+    |         Function        |     panda      |  libc(MacOSX)  |   libc(Linux)  |   libc(FreeBSD)  |
+    -------------------------------------------------------------------------------------------------
+    | gmtime(epoch, &date)    |     53 M/s     |     11 M/s     |     15 M/s     |       12 M/s     |
+    | timegm(&date)           |     30 M/s     |    0.4 M/s     |     10 M/s     |     0.15 M/s     |
+    | timegml(&date)          |    135 M/s     |       --       |       --       |        --        |
+    | localtime(epoch, &date) |     26 M/s     |    5.5 M/s     |      7 M/s     |        3 M/s     |
+    | timelocal(&date)        |     23 M/s     |    0.5 M/s     |    1.2 M/s     |      0.1 M/s     |
+    | timelocall(&date)       |     50 M/s     |       --       |       --       |        --        |
+    -------------------------------------------------------------------------------------------------
 
 =head1 AUTHOR
 

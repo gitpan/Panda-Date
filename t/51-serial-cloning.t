@@ -71,4 +71,10 @@ ok(!$idate_cloned->till->tzlocal);
 is($idate_cloned->from->tzname, 'Europe/Kiev');
 is($idate_cloned->till->tzname, 'Europe/Kiev');
 
+#bug with dclone+newfrom
+my $time = time();
+$date = date($time);
+$date_cloned = dclone($date);
+is(date($date_cloned)->epoch, $time);
+
 done_testing();

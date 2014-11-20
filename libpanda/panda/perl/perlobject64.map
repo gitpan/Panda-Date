@@ -1,9 +1,0 @@
-# "perlobject64.map"  Crazy Panda
-
-TYPEMAP
-
-int64_t     T_IV
-uint64_t    T_UV
-
-time_t  T_IV
-ptime_t T_IV

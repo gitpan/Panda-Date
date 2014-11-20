@@ -12,7 +12,7 @@
 #include "sv2class.h"
 #undef SV2C_CLONE
 
-namespace panda { namespace xsdate {
+namespace xs { namespace date {
 
 void date_freeze (Date* date, char* buf) {
     *((ptime_t*) buf) = PTIME_HTOBE64(date->epoch());
@@ -22,7 +22,7 @@ void date_freeze (Date* date, char* buf) {
     else strcpy(buf, date->timezone()->name);
 }
 
-const char* date_thaw (ptime_t* epoch, tz** zone, const char* ptr, size_t len) {
+const char* date_thaw (ptime_t* epoch, const tz** zone, const char* ptr, size_t len) {
     if (len < sizeof(ptime_t)) croak("Panda::Date: cannot 'thaw' - corrupted data");
     *epoch = PTIME_BE64TOH(*((ptime_t*) ptr));
     ptr += sizeof(ptime_t);
@@ -76,18 +76,18 @@ HV* export_timezone (const tz* zone) {
         hv_store(outer_end, "mon",  3, newSVuv(zone->future.outer.end.mon),  0);
         hv_store(outer_end, "week", 4, newSVuv(zone->future.outer.end.yday), 0);
         hv_store(outer_end, "day",  3, newSVuv(zone->future.outer.end.wday), 0);
-        hv_store(outer_end, "hour", 4, newSVuv(zone->future.outer.end.hour), 0);
-        hv_store(outer_end, "min",  3, newSVuv(zone->future.outer.end.min),  0);
-        hv_store(outer_end, "sec",  3, newSVuv(zone->future.outer.end.sec),  0);
+        hv_store(outer_end, "hour", 4, newSViv(zone->future.outer.end.hour), 0);
+        hv_store(outer_end, "min",  3, newSViv(zone->future.outer.end.min),  0);
+        hv_store(outer_end, "sec",  3, newSViv(zone->future.outer.end.sec),  0);
         hv_store(outer, "end", 3, newRV_noinc((SV*) outer_end), 0);
         
         HV* inner_end = newHV();
         hv_store(inner_end, "mon",  3, newSVuv(zone->future.inner.end.mon),  0);
         hv_store(inner_end, "week", 4, newSVuv(zone->future.inner.end.yday), 0);
         hv_store(inner_end, "day",  3, newSVuv(zone->future.inner.end.wday), 0);
-        hv_store(inner_end, "hour", 4, newSVuv(zone->future.inner.end.hour), 0);
-        hv_store(inner_end, "min",  3, newSVuv(zone->future.inner.end.min),  0);
-        hv_store(inner_end, "sec",  3, newSVuv(zone->future.inner.end.sec),  0);
+        hv_store(inner_end, "hour", 4, newSViv(zone->future.inner.end.hour), 0);
+        hv_store(inner_end, "min",  3, newSViv(zone->future.inner.end.min),  0);
+        hv_store(inner_end, "sec",  3, newSViv(zone->future.inner.end.sec),  0);
         hv_store(inner, "end", 3, newRV_noinc((SV*) inner_end), 0);
         
         hv_store(future, "inner", 5, newRV_noinc((SV*) inner), 0);
@@ -103,4 +103,4 @@ HV* export_timezone (const tz* zone) {
     return ret;
 }
 
-};};
+}}

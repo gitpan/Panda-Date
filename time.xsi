@@ -8,39 +8,25 @@ PROTOTYPES: DISABLE
 #  define LT_FORMAT "%a %b %e %H:%M:%S %Y"
 #endif
 
-void
-tzset (SV* newzone = NULL)
-PPCODE:
+void tzset (SV* newzone = NULL) {
     if (newzone) panda::time::tzset(SvPV_nolen(newzone));
     else panda::time::tzset();
+}
 
-
-const char*
-tzdir (SV* newdirSV = NULL)
-CODE:
+const char* tzdir (SV* newdirSV = NULL) {
     if (newdirSV) {
         const char* newdir = SvOK(newdirSV) ? SvPV_nolen(newdirSV) : NULL;
         if (tzdir(newdir)) RETVAL = "1";
         else XSRETURN_UNDEF;
     } else
         RETVAL = tzdir();
-OUTPUT:
-    RETVAL
+}
 
-
-const char*
-tzsysdir ()
-CODE:
+const char* tzsysdir () {
     RETVAL = tzsysdir();
-OUTPUT:
-    RETVAL
-
+}
     
-void
-gmtime (SV* epochSV = NULL)
-ALIAS:
-    localtime = 1
-PPCODE:
+void gmtime (SV* epochSV = NULL) : ALIAS(localtime=1) {
     ptime_t epoch;
     if (epochSV) epoch = (ptime_t) SvMIV(epochSV);
     else epoch = (ptime_t) time(NULL);
@@ -72,15 +58,9 @@ PPCODE:
         mPUSHs(ret);
         XSRETURN(1);
     }
+}
 
-
-ptime_t
-timegm (SV* sec, SV* min, SV* hour, SV* mday, SV* mon, SV* year, SV* isdst = NULL)
-ALIAS:
-    timelocal  = 1
-    timegmn    = 2
-    timelocaln = 3
-CODE:
+ptime_t timegm (SV* sec, SV* min, SV* hour, SV* mday, SV* mon, SV* year, SV* isdst = NULL) : ALIAS(timelocal=1, timegmn=2, timelocaln=3) {
     datetime date;
     date.sec  = SvMIV(sec);
     date.min  = SvMIV(min);
@@ -116,15 +96,9 @@ CODE:
         sv_setiv(year, date.year);
         if (isdst) sv_setiv(isdst, date.isdst);
     }
-OUTPUT:
-    RETVAL
+}
 
-
-time_t
-systimegm (int64_t sec, int64_t min, int64_t hour, int64_t mday, int64_t mon, int64_t year, int64_t isdst = -1)
-ALIAS:
-    systimelocal = 1
-CODE:
+time_t systimegm (int64_t sec, int64_t min, int64_t hour, int64_t mday, int64_t mon, int64_t year, int64_t isdst = -1) : ALIAS(systimelocal=1) {
     struct tm date;
     date.tm_sec   = sec;
     date.tm_min   = min;
@@ -135,22 +109,12 @@ CODE:
     date.tm_isdst = isdst;
     if (ix == 0) RETVAL = SYSTIMEGM(&date);
     else RETVAL = SYSTIMELOCAL(&date);
-OUTPUT:
-    RETVAL
+}
 
-
-HVR
-tzget (const char* zonename = NULL)
-CODE:
+HV* tzget (const char* zonename = NULL) {
     RETVAL = export_timezone(tzget(zonename));
-OUTPUT:
-    RETVAL
+}
 
-
-const char*
-tzname ()
-CODE:
+const char* tzname () {
     RETVAL = tzlocal()->name;
-OUTPUT:
-    RETVAL
-
+}

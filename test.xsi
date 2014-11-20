@@ -8,36 +8,21 @@ PROTOTYPES: DISABLE
 #define GMTIME(a,b)    igmtime(a,b)
 #define TIMEGM(a)      itimegm(a)
 #define TIMEGML(a)     itimegml(a)
-#define LOCALTIME(a,b) ilocaltime(a,b)
-#define TIMELOCAL(a)   itimelocal(a)
-#define TIMELOCALL(a)  itimelocall(a)
 #else
 #define GMTIME(a,b)    gmtime(a,b)
 #define TIMEGM(a)      timegm(a)
 #define TIMEGML(a)     timegml(a)
-#define LOCALTIME(a,b) localtime(a,b)
-#define TIMELOCAL(a)   timelocal(a)
-#define TIMELOCALL(a)  timelocall(a)
 #endif
 
-void
-bench_my (const char* str)
-PPCODE:
+void bench_my (const char* str) {
     XSRETURN_UNDEF;
+}
 
-HVR
-test_my (const char* str)
-CODE:
+HV* test_my (const char* str) {
     RETVAL = newHV();
-OUTPUT:
-    RETVAL
-    
+}    
 
-bool
-test_gmtime (ptime_t step, ptime_t from, ptime_t till)
-ALIAS:
-    test_localtime = 1
-CODE:
+bool test_gmtime (ptime_t step, ptime_t from, ptime_t till) : ALIAS(test_localtime=1) {
     datetime date1;
     struct tm date2;
     
@@ -93,15 +78,9 @@ CODE:
     if (!test) printf("TESTED %d TIMES\n", cnt);
     
     RETVAL = true;
-OUTPUT:
-    RETVAL
+}
 
-
-bool
-test_timegm (ptime_t step, ptime_t from, ptime_t till)
-ALIAS:
-    test_timelocal = 1
-CODE:
+bool test_timegm (ptime_t step, ptime_t from, ptime_t till) : ALIAS(test_timelocal=1) {
     datetime date1;
     struct tm date2;
     
@@ -212,19 +191,13 @@ CODE:
     if (!test) printf("TESTED %d TIMES\n", cnt);
     
     RETVAL = true;
-OUTPUT:
-    RETVAL
+}
 
-
-AVR
-gmtime_bench (ptime_t epoch)
-ALIAS:
-    localtime_bench = 1
-CODE:
+AV* gmtime_bench (ptime_t epoch) : ALIAS(localtime_bench=1) {
     datetime date;
     ptime_t max_epoch = epoch + 10000;
     if      (ix == 0) while(epoch++ < max_epoch) GMTIME(epoch, &date);
-    else if (ix == 1) while(epoch++ < max_epoch) LOCALTIME(epoch, &date);
+    else if (ix == 1) while(epoch++ < max_epoch) localtime(epoch, &date);
     
     RETVAL = newAV();
     av_push(RETVAL, newSViv(date.sec));
@@ -238,15 +211,9 @@ CODE:
     av_push(RETVAL, newSViv(date.isdst));
     av_push(RETVAL, newSViv(date.gmtoff));
     av_push(RETVAL, newSVpv(date.zone, 0));
-OUTPUT:
-    RETVAL
+}
 
-
-AVR
-posix_gmtime_bench (time_t epoch)
-ALIAS:
-    posix_localtime_bench = 1
-CODE:
+AV* posix_gmtime_bench (time_t epoch) : ALIAS(posix_localtime_bench=1) {
     struct tm date;
     time_t max_epoch = epoch + 10000;
     if      (ix == 0) while(epoch++ < max_epoch) gmtime_r(&epoch, &date);
@@ -264,17 +231,9 @@ CODE:
     av_push(RETVAL, newSViv(date.tm_isdst));
     av_push(RETVAL, newSViv(date.tm_gmtoff));
     av_push(RETVAL, newSVpv(date.tm_zone, 0));
-OUTPUT:
-    RETVAL
+}
 
-
-ptime_t
-timegm_bench (ptime_t sec, ptime_t min, ptime_t hour, ptime_t mday, ptime_t mon, ptime_t year)
-ALIAS:
-    timegml_bench = 1
-    timelocal_bench = 2
-    timelocall_bench = 3
-CODE:
+ptime_t timegm_bench (ptime_t sec, ptime_t min, ptime_t hour, ptime_t mday, ptime_t mon, ptime_t year) : ALIAS(timegml_bench=1, timelocal_bench=2, timelocall_bench=3) {
     datetime date;
     date.sec = sec;
     date.min = min;
@@ -290,17 +249,11 @@ CODE:
     
     if      (ix == 0) while (i++ < cnt) RETVAL += TIMEGM(&date);
     else if (ix == 1) while (i++ < cnt) RETVAL += TIMEGML(&date);
-    else if (ix == 2) while (i++ < cnt) RETVAL += TIMELOCAL(&date);
-    else if (ix == 3) while (i++ < cnt) RETVAL += TIMELOCALL(&date);
-OUTPUT:
-    RETVAL
+    else if (ix == 2) while (i++ < cnt) RETVAL += timelocal(&date);
+    else if (ix == 3) while (i++ < cnt) RETVAL += timelocall(&date);
+}
 
-
-time_t
-posix_timegm_bench (int64_t sec, int64_t min, int64_t hour, int64_t mday, int64_t mon, int64_t year)
-ALIAS:
-    posix_timelocal_bench = 1
-CODE:
+time_t posix_timegm_bench (int64_t sec, int64_t min, int64_t hour, int64_t mday, int64_t mon, int64_t year) : ALIAS(posix_timelocal_bench=1) {
     struct tm date;
     date.tm_sec = sec;
     date.tm_min = min;
@@ -316,7 +269,6 @@ CODE:
     
     if      (ix == 0) while (i++ < cnt) RETVAL += timegm(&date);
     else if (ix == 1) while (i++ < cnt) RETVAL += timelocal(&date);
-OUTPUT:
-    RETVAL
+}
 
 #endif

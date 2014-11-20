@@ -1,3 +1,15 @@
+2.7      20.11.2014
+           - Bugfix: relative sec/min/hour addition/subtraction
+           - Embedded zones are updated
+           - Added clone() method to rel dates and intervals
+           - Added CLONE hook, for cloning dates, rel dates and intervals via Panda::Lib::clone()
+           - C++ interface refactor
+           - docs changes
+2.6      21.08.2014
+           - Bugfix: Creating a date object from another in some cases created corrupted objects
+           - Set const modifiers for const methods in C++ interface
+2.5      29.03.2014
+           - move to Panda::Install/XS build system, make C/C++ code shared and install headers and payload.
 2.4      07.02.2014
            - fix building on some platforms
 2.3      06.02.2014

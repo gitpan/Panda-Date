@@ -34,9 +34,9 @@
 #  define SV2C_TYPE_CROAK croak("Panda::Date: cannot create/set/clone object - unknown argument passed")
 #endif
 
-namespace panda { namespace xsdate {
+namespace xs { namespace date {
 
-Date* SV2C_DATE_FUNC (SV* arg, tz* zone, Date* operand) {
+Date* SV2C_DATE_FUNC (SV* arg, const tz* zone, Date* operand) {
     ptime_t epoch = 0;
     
     if (SvOK(arg)) {
@@ -215,4 +215,4 @@ DateInt* SV2C_DATEINT_FUNC (SV* fromSV, SV* tillSV, DateInt* operand) {
 
 #endif
 
-};};
+}}

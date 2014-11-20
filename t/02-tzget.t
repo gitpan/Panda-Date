@@ -43,7 +43,7 @@ wrong('MSK-4MSD,M3.1.0/1:59:58,M10.5.0/');
 wrong('MSK-4MSD,M3.1.0/1:59:,M10.5.0');
 wrong('MSK-4MSD,M3.1.0/1:,M10.5.0');
 wrong('MSK-4MSD,M3.1.0/,M10.5.0');
-wrong('MSK-4MSD,M3.1.0/-1,M10.5.0');
+check('MSK-4MSD,M3.1.0/-1,M10.5.0');
 wrong('MSK-4MSD,M3.0.0,M10.5.0');
 wrong('MSK-4MSD,M3.6.0,M10.5.0');
 wrong('MSK-4MSD,M3.0.0,M13.5.0');
@@ -66,11 +66,12 @@ is($info->{name}, tzname());
 is(ref($info->{transitions}), 'ARRAY');
 
 foreach my $zone (available_zones()) {
+    say "$zone";
     $info = tzget($zone);
-    ok($info);
-    is($info->{is_local}, 0);
-    is($info->{name}, $zone);
-    is(ref($info->{transitions}), 'ARRAY');
+    ok($info, "info is present ($zone)");
+    is($info->{is_local}, 0, "zone is not local ($zone)");
+    is($info->{name}, $zone, "info is correct ($zone)");
+    is(ref($info->{transitions}), 'ARRAY', "transitions are present ($zone)");
 }
 
 done_testing();

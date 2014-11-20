@@ -11,6 +11,30 @@ use Data::Dumper qw/Dumper/;
 use Storable qw/freeze nfreeze thaw dclone/;
 say "START";
 
+sub p { 
+    my $pdate = shift; 
+    printf "%s tz:%s dst:%s epoch:%s\n", $pdate->string, $pdate->tz->{name}, $pdate->isdst ? 'Y' : 'N', $pdate->epoch; 
+}; 
+
+#-- dst starts at 01:00 
+my $date = Panda::Date->new('2014-03-30 00:59:59'); 
+$date->tz('Europe/London'); 
+p($date); 
+my $delta = Panda::Date::Rel->new({sec => 1}); 
+$date->add($delta); 
+p($date); 
+$date->subtract($delta); 
+p($date); 
+
+#output: 
+#2014-03-30 00:59:59 tz:Europe/London dst:N epoch:1396141199 
+#2014-03-30 02:00:00 tz:Europe/London dst:Y epoch:1396141200 
+#2014-03-30 02:59:59 tz:Europe/London dst:Y epoch:1396144799
+
+# I would expect value '2014-03-30 00:59:59' as a last result.
+
+exit;
+
 tzset();
 POSIX::tzset();
 

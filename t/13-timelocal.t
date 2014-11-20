@@ -20,19 +20,14 @@ my ($Y,$M,$D,$h,$m,$s,$isdst);
 
 tzset('Europe/Moscow');
 # check past
-is(timelocal(19, 13, 14, 30, 9, 1876), -2940149821);
+is(timelocal(16, 13, 14, 30, 9, 1876), -2940149821);
 # check past within first transition.
-is(timelocal(40, 59, 23, 31, 11, 1879), -2840149820); # Auto-dst should always choose later time by default
-is(timelocal(40, 59, 23, 31, 11, 1879, 0), -2840149820); # force choosing later time
-is(timelocal(59, 59, 23, 31, 11, 1879, 0), -2840149801); # force choosing later time
-is(timelocal(40, 59, 23, 31, 11, 1879, 1), -2840149840); # force choosing earlier time
-is(timelocal(59, 59, 23, 31, 11, 1879, 1), -2840149821); # force choosing earlier time
-is(timelocal(0, 0, 0, 1, 0, 1880), -2840149800); # no ambiguity
+is(timelocal(59, 59, 23, 2, 6, 1916), -1688265018); # Auto-dst should always choose later time by default
+is(timelocal(2, 1, 0, 3, 6, 1916), -1688265017);
+is(timelocal(3, 1, 0, 3, 6, 1916), -1688265016);
 # check that forcing earlier/later time doesn't matter when no ambiguity
-is(timelocal(19, 13, 14, 30, 9, 1876, 0), -2940149821);
-is(timelocal(19, 13, 14, 30, 9, 1876, 1), -2940149821);
-is(timelocal(0, 0, 0, 1, 0, 1880, 0), -2840149800);
-is(timelocal(0, 0, 0, 1, 0, 1880, 1), -2840149800);
+is(timelocal(2, 1, 0, 3, 6, 1916, 0), -1688265017);
+is(timelocal(3, 1, 0, 3, 6, 1916, 1), -1688265016);
 # transitions
 is(timelocal(0, 20, 4, 21, 10, 2004), 1101000000); # standart time
 is(timelocal(20, 33, 23, 5, 5, 2005), 1118000000); # dst
@@ -50,15 +45,15 @@ is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 1111881599);
 is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 1111881599);
 cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,2005,2,27,3,59,59]);
 # non-standart jump forward (DST + change zone, 2hrs)
-is(timelocal(59, 59, 21, 31, 4, 1918), -1627965049);
-is(timelocal(0, 0, 0, 1, 5, 1918), -1627965048);
+is(timelocal(59, 59, 21, 31, 4, 1918), -1627965080);
+is(timelocal(0, 0, 0, 1, 5, 1918), -1627965079);
 ($isdst,$Y,$M,$D,$h,$m,$s) = (0,1918,4,31,22,0,0);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), -1627965048);
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), -1627965048);
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), -1627965079);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), -1627965079);
 cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,1918,5,1,0,0,0]);
 ($isdst,$Y,$M,$D,$h,$m,$s) = (0,1918,4,31,23,30,0);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), -1627959648);
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), -1627959648);
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), -1627959679);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), -1627959679);
 cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [1,1918,5,1,1,30,0]);
 # transition jump backward
 is(timelocal(59, 59, 1, 30, 9, 2005), 1130623199); # no ambiguity
@@ -71,11 +66,11 @@ is(timelocal(59, 59, 2, 30, 9, 2005, 1), 1130626799); # ambiguity resolved as ea
 is(timelocal(0, 0, 3, 30, 9, 2005), 1130630400); # no ambiguity
 is(timelocal(0, 0, 3, 30, 9, 2005, 1), 1130630400); # no ambiguity
 # future static rules
-is(timelocal(20, 33, 7, 18, 4, 2033), 2000000000);
+is(timelocal(20, 33, 7, 18, 4, 2033), 2000003600);
 # normalize
 ($isdst,$Y,$M,$D,$h,$m,$s) = (1,2070,-123,-1234,-12345,-123456,133456789);
-is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807081029);
-is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807081029);
+is(timelocal($s,$m,$h,$D,$M,$Y,$isdst), 2807084629);
+is(timelocaln($s,$m,$h,$D,$M,$Y,$isdst), 2807084629);
 cmp_deeply([$isdst,$Y,$M,$D,$h,$m,$s], [0,2058,11,14,12,43,49]);
 
 # future dynamic rules for northern hemisphere

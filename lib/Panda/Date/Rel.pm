@@ -259,6 +259,14 @@ Same as '==' but returns TRUE only if 2 reldates are fully identical.
     $reldate == "14M";   # true
     $reldate eq "1Y 2M"; # true
     $reldate eq "14M";   # false
+    
+=head4 clone()
+
+Clones object.
+
+=head4 CLONE()
+
+Hook for Panda::Lib::clone().
 
 =head1 OPERATOR OVERLOAD RULES
 

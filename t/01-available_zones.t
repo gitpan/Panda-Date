@@ -5,7 +5,8 @@ use Test::Deep;
 use lib 't/lib'; use PDTest;
 
 my @zones = available_zones();
-is(scalar(@zones), 1162);
+my $cnt = @zones;
+is($cnt, 1189);
 
 if ($ENV{TEST_FULL}) {
     use_system_zones();
