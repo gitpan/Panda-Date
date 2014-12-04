@@ -5,7 +5,7 @@ use Panda::Time;
 use Panda::Date::Rel;
 use Panda::Date::Int;
 
-our $VERSION = '2.7';
+our $VERSION = '2.8';
 
 =head1 NAME
 

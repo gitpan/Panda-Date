@@ -117,4 +117,14 @@ is($date->year, 85678);
 is($date, "85678-01-01");
 is($date->string, "85678-01-01 00:00:00");
 
+# dont core dump on bad values
+$date = eval { date(bless([114,11,4,20,38,43,4,337,0,1417714723,'MSK'], 'Class::Date')); 1 };
+is($date, undef);
+$date = eval { date(bless({}, 'jopa')); 1 };
+is($date, undef);
+$date = eval { date(\1); 1 };
+is($date, undef);
+$date = eval { date(bless(\(my $a = 1), 'popa')); 1 };
+is($date, undef);
+
 done_testing();

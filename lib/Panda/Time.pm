@@ -4,7 +4,7 @@ use 5.012;
 use Panda::Lib;
 use Panda::Install::Payload;
 
-our $VERSION = '2.7';
+our $VERSION = '2.8';
 
 require Panda::XSLoader;
 Panda::XSLoader::bootstrap('Panda::Date', $VERSION);

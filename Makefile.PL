@@ -20,5 +20,5 @@ write_makefile(
         },
     },
     #DEFINE    => '-DTEST_FULL -DTEST_INLINE',
-    #OPTIMIZE  => '-g -O0',
+    #OPTIMIZE => '-g',
 );

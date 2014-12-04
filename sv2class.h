@@ -31,7 +31,7 @@
 #endif
 
 #ifndef SV2C_TYPE_CROAK
-#  define SV2C_TYPE_CROAK croak("Panda::Date: cannot create/set/clone object - unknown argument passed")
+#  define SV2C_TYPE_CROAK croak("Panda::Date: cannot create/set/clone object - argument of unknown type passed")
 #endif
 
 namespace xs { namespace date {
@@ -41,10 +41,13 @@ Date* SV2C_DATE_FUNC (SV* arg, const tz* zone, Date* operand) {
     
     if (SvOK(arg)) {
         if (SvROK(arg)) {
-            if (sv_isobject(arg) && sv_isa(arg, DATE_CLASS)) {
+            if (sv_isobject(arg)) {
 #ifndef SV2C_CLONE
-                SV2C_DATE_ACTION((Date *) SvIV(SvRV(arg)), zone);
-                return operand;
+                if (sv_isa(arg, DATE_CLASS)) {
+                    SV2C_DATE_ACTION((Date *) SvIV(SvRV(arg)), zone);
+                    return operand;
+                }
+                else SV2C_TYPE_CROAK;
 #endif
             }
             else {
